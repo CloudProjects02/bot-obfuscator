@@ -24,19 +24,21 @@ const ENG_DIR   = __dirname;
 const SHARED    = path.join(ENG_DIR, 'shared');
 const UNLUAC    = path.join(SHARED, 'unluac.jar');
 
-const TIMEOUT_MS = 300_000; // 5 min
+const TIMEOUT_MS = 120_000; // 2 min per engine
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function spawnAsync(cmd, args, opts = {}) {
+  const limitMs = opts.timeout ?? TIMEOUT_MS;
   return new Promise((resolve) => {
-    let out = '', err = '';
-    const proc = spawn(cmd, args, { ...opts, windowsHide: true });
+    let out = '', err = '', settled = false;
+    const done = (val) => { if (!settled) { settled = true; clearTimeout(timer); resolve(val); } };
+    const proc  = spawn(cmd, args, { ...opts, windowsHide: true });
+    const timer = setTimeout(() => { try { proc.kill('SIGKILL'); } catch {} done({ code: -1, out, err: `Engine timed out after ${limitMs / 1000}s` }); }, limitMs);
     proc.stdout?.on('data', d => (out += d));
     proc.stderr?.on('data', d => (err += d));
-    proc.on('close', code => resolve({ code, out, err }));
-    proc.on('error', e => resolve({ code: -1, out, err: err + e.message }));
-    setTimeout(() => { proc.kill(); resolve({ code: -1, out, err: 'TIMEOUT' }); }, TIMEOUT_MS);
+    proc.on('close', code => done({ code, out, err }));
+    proc.on('error', e    => done({ code: -1, out, err: err + e.message }));
   });
 }
 

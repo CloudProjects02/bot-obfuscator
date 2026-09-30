@@ -498,7 +498,8 @@ function buildEngineSelectMsg(filename, detected, recommendedId, jobId, confiden
   };
 }
 
-function buildLoadingMsg(filename, engineLabel) {
+function buildLoadingMsg(filename, engineLabel, elapsedSec = null) {
+  const timeStr = elapsedSec !== null ? `  ·  **${elapsedSec}s elapsed**` : '';
   return {
     flags: CV2_FLAG,
     components: [{
@@ -508,9 +509,9 @@ function buildLoadingMsg(filename, engineLabel) {
         type: 10,
         content: [
           `## <a:loading:1536769812187840633> Deobfuscating`,
-          `Running **${engineLabel}** engine...`,
+          `Running **${engineLabel}** engine...${timeStr}`,
           `**File:** \`${filename}\``,
-          `This may take a moment.`,
+          `This may take a moment. Timeout: 2 min.`,
         ].join('\n'),
       }],
     }],
@@ -738,11 +739,19 @@ function buildDetectMsg(filename, engine, confidence) {
 async function executeDeob(interaction, job, engineId) {
   const engine     = ALL_ENGINES.find(e => e.id === engineId) || ALL_ENGINES[0];
   const outputPath = path.join(job.tmpDir, `output.lua`);
+  const t0         = Date.now();
 
   await interaction.editReply(buildLoadingMsg(job.filename, engine.label));
 
+  // Update elapsed time every 15s so user knows it's still running
+  const ticker = setInterval(async () => {
+    const sec = Math.round((Date.now() - t0) / 1000);
+    try { await interaction.editReply(buildLoadingMsg(job.filename, engine.label, sec)); } catch {}
+  }, 15_000);
+
   try {
     const { ok, stderr, elapsed } = await runDeob(job.inputPath, outputPath, engineId);
+    clearInterval(ticker);
 
     if (!ok) {
       const errText = stderr || 'No output produced';
@@ -783,6 +792,7 @@ async function executeDeob(interaction, job, engineId) {
       files: [new AttachmentBuilder(Buffer.from(outContent, 'utf8'), { name: outName })],
     });
   } finally {
+    clearInterval(ticker);
     pendingJobs.delete(job.id);
     try { fs.rmSync(job.tmpDir, { recursive: true }); } catch {}
   }
