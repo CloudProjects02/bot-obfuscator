@@ -604,7 +604,9 @@ async function executeDeob(interaction, job, engineId) {
       return;
     }
 
-    const outContent  = fs.readFileSync(outputPath, 'utf8');
+    const rawContent  = fs.readFileSync(outputPath, 'utf8');
+    const header      = `-- Deobfuscated by discord.gg/leaking\n-- Detected obfuscation: ${engine.label}\n\n`;
+    const outContent  = header + rawContent;
     const outBytes    = Buffer.byteLength(outContent, 'utf8');
     const inBytes     = fs.statSync(job.inputPath).size;
     const reduction   = Math.max(0, Math.round((1 - outBytes / inBytes) * 100));
@@ -928,7 +930,11 @@ client.on('interactionCreate', async (interaction) => {
           return;
         }
 
-        const outContent = fs.readFileSync(outPath, 'utf8');
+        const rawDump    = fs.readFileSync(outPath, 'utf8');
+        const srcDump    = fs.readFileSync(inPath, 'latin1');
+        const detDump    = engineForDetection(srcDump);
+        const dumpHeader = `-- Deobfuscated by discord.gg/leaking\n-- Detected obfuscation: ${detDump.label}\n\n`;
+        const outContent = dumpHeader + rawDump;
         const outBytes   = Buffer.byteLength(outContent, 'utf8');
         const urls       = extractUrlsTouched(outContent);
         const pastfyUrl  = await uploadPastefy(outContent, att.name + '.dump.lua');
@@ -943,10 +949,6 @@ client.on('interactionCreate', async (interaction) => {
         const opMatch = stderr.match(/(\d+) statement/);
         const ops     = opMatch ? opMatch[1] : '?';
 
-        const srcDump = fs.readFileSync(inPath, 'latin1');
-        const detDump = engineForDetection(srcDump);
-        const plugin  = { label: detDump.label };
-
         const dumpResultId = `r_${Date.now()}`;
         resultCache.set(dumpResultId, { content: outContent, filename: outName, expire: Date.now() + 30 * 60_000 });
 
@@ -956,7 +958,7 @@ client.on('interactionCreate', async (interaction) => {
             elapsed,
             operations:  ops,
             stages:      '1',
-            detected:    plugin.label,
+            detected:    detDump.label,
             urlsTouched: urls,
             codePreview: preview,
             pastfyUrl,
