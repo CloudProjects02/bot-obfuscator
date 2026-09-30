@@ -1,0 +1,32 @@
+{
+  "1522639832281514055": {
+    "hookOp": true,
+    "minifier": true,
+    "explore_funcs": true,
+    "inf_loops": true,
+    "discord": true,
+    "constants": false,
+    "spyexeconly": false,
+    "roblox": false,
+    "type_annotations": false,
+    "isPremium": true,
+    "lua": false,
+    "_runtime": "lune",
+    "_timeout": 64
+  },
+  "1537112258860290078": {
+    "hookOp": true,
+    "minifier": true,
+    "explore_funcs": true,
+    "inf_loops": true,
+    "discord": true,
+    "constants": true,
+    "spyexeconly": false,
+    "roblox": true,
+    "type_annotations": true,
+    "isPremium": true,
+    "lua": true,
+    "_runtime": "lune",
+    "_timeout": 64
+  }
+}

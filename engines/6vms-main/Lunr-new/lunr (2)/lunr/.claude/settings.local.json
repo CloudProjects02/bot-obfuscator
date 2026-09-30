@@ -1,0 +1,22 @@
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "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",
+    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "inclusionai/ring-2.6-1t:free",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "inclusionai/ring-2.6-1t:free",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "inclusionai/ring-2.6-1t:free"
+  },
+  "permissions": {
+    "allow": [
+      "PowerShell(*)",
+      "Bash(*)",
+      "Read(**)",
+      "Write(**)",
+      "Edit(**)",
+      "Delete(**)",
+      "Execute(*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

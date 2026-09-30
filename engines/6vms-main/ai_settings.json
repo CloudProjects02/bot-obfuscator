@@ -1,0 +1,6 @@
+{
+  "model": "deepseek-ai/deepseek-v4-flash-0731",
+  "temperature": 0.2,
+  "max_tokens": 16384,
+  "thinking": true
+}

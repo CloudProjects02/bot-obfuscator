@@ -1,0 +1,12 @@
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\bin\Release\net6.0\Unluau.deps.json
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\bin\Release\net6.0\Unluau.dll
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\bin\Release\net6.0\Unluau.pdb
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\obj\Release\net6.0\Unluau.csproj.AssemblyReference.cache
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\obj\Release\net6.0\Unluau.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\obj\Release\net6.0\Unluau.AssemblyInfoInputs.cache
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\obj\Release\net6.0\Unluau.AssemblyInfo.cs
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\obj\Release\net6.0\Unluau.csproj.CoreCompileInputs.cache
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\obj\Release\net6.0\Unluau.dll
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\obj\Release\net6.0\refint\Unluau.dll
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\obj\Release\net6.0\Unluau.pdb
+C:\Users\Gian Ada\Downloads\6Vms\6Vms\unluau\Unluau\obj\Release\net6.0\ref\Unluau.dll

@@ -1,0 +1,36 @@
+from __future__ import annotations
+
+"""Standard Luau libraries and global functions."""
+
+LUAU_GLOBALS = {
+    "bit32",
+    "buffer",
+    "table",
+    "string",
+    "math",
+    "coroutine",
+    "os",
+    "debug",
+    "utf8",
+    "task",
+    "typeof",
+    "print",
+    "warn",
+    "error",
+    "assert",
+    "pcall",
+    "xpcall",
+    "select",
+    "next",
+    "pairs",
+    "ipairs",
+    "tonumber",
+    "tostring",
+    "type",
+    "setmetatable",
+    "getmetatable",
+    "rawget",
+    "rawset",
+    "rawequal",
+    "rawlen",
+}

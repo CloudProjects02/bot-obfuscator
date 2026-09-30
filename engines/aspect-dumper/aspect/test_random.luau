@@ -1,0 +1,6 @@
+local r = Random.new(177465824)
+print("v1:", r:NextNumber())
+print("v2:", r:NextInteger(189, 1164))
+print("v3:", r:NextNumber())
+print("v4:", r:NextNumber())
+print("v5:", r:NextInteger(75, 497))

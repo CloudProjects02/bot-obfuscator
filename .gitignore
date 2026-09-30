@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+engines/moonsec/node_modules/
+engines/6vms-main/PromDeobf/node_modules/
+
+# Environment / secrets
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Runtime output dirs
+engines/6vms-main/cache/
+engines/6vms-main/env/
+engines/6vms-main/dumps/
+engines/6vms-main/bot_tmp/
+engines/6vms-main/dex/
+engines/cracker2/output/
+engines/luraph-v17/output/
+
+# Temp files
+*.tmp
+*.tmp.luac
+data/usage.json

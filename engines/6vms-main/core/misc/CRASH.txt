@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="dark" data-accent="purple">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Protected by Obscura - Obscura</title>
+<link rel="icon" type="image/png" href="/assets/key_logo2.png?v=1">
+<meta name="google" content="notranslate">
+<script>(function(){try{
+  if(!('scrollRestoration' in history)) return;
+  var e=(performance.getEntriesByType&&performance.getEntriesByType('navigation')[0])||null;
+  var t=e?e.type:((performance.navigation&&performance.navigation.type===2)?'back_forward':'');
+  if(t!=='back_forward') history.scrollRestoration='manual';
+}catch(err){}})();</script><script>window.__i18n=[];</script>
+<script src="/js/i18n.js?v=6" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=block">
+<style>@font-face{font-family:'Inter Fallback';src:local('Arial'),local('Helvetica Neue'),local('Helvetica');ascent-override:90.20%;descent-override:22.48%;line-gap-override:0%;size-adjust:107.40%}</style>
+<style>
+  :root{
+    --bg:#000; --panel:#08080c; --panel-2:#0c0c12;
+    --line:rgba(255,255,255,0.09); --line-soft:rgba(255,255,255,0.05);
+    --text:#f7f7f9; --text-2:#95959f; --text-3:#74747e;
+    --accent:#8b5cf6; --accent-hi:194,176,255; --accent-2:#6d8bff; --accent-rgb:139,92,246;
+    --code-str:#7ee0a3; --code-key:#c79bff; --code-fn:#7fa6ff; --code-num:#f0a45a; --code-com:#54545f;
+    --maxw:1200px;
+    --ease:cubic-bezier(.22,.61,.36,1);
+    --spring:cubic-bezier(.34,1.4,.5,1);
+    --dur-1:.16s;  /* color / border / bg fades */
+    --dur-2:.26s;  /* shadow / panel / cross-fades */
+    --dur-3:.4s;   /* larger reveals / open-close */
+    --ease-entrance:cubic-bezier(.3,.15,.3,1); /* ENTRANCE reveals only - non-front-loading */
+    --dur-reveal:.75s;                         /* .reveal duration */
+    /* invertible surfaces for the light theme (below) */
+    --nav-bg:rgba(0,0,0,0.55); --nav-bg-scrolled:rgba(0,0,0,0.8);
+    --cta-bg:#f4f4f6; --cta-bg-hi:#ffffff; --cta-fg:#0a0a0c;
+    --btn2-bg:rgba(13,13,13,0.5); --btn2-bg-hi:rgba(18,18,18,0.5); --btn2-line:var(--line); --btn2-line-hi:rgba(255,255,255,0.14);
+    --code-bg:#08080c;
+  }
+  /* LIGHT THEME: set pre-paint from localStorage (toggle in the nav). */
+  html[data-theme="light"]{
+    --bg:#f5f5f8; --panel:#ffffff; --panel-2:#f2f2f6;
+    --line:rgba(17,17,27,0.11); --line-soft:rgba(17,17,27,0.07);
+    --text:#17171b; --text-2:#53535d; --text-3:#82828c;
+    --accent:#7c3aed; --accent-hi:109,40,217; --accent-2:#4f46e5; --accent-rgb:124,58,237;
+    --code-com:#82828c;
+    --nav-bg:rgba(255,255,255,0.72); --nav-bg-scrolled:rgba(255,255,255,0.92);
+    --cta-bg:#17171b; --cta-bg-hi:#000000; --cta-fg:#ffffff;
+    --btn2-bg:#ffffff; --btn2-bg-hi:#f2f2f6; --btn2-line:rgba(17,17,27,0.14); --btn2-line-hi:rgba(17,17,27,0.28);
+    --code-bg:#f2f2f6;
+  }
+  /* ACCENT PALETTES - the swatch button by the language switcher sets data-accent on <html>
+     + the obs_accent cookie. Specificity (0,2,0) beats the base :root purple AND the light
+     theme's html[data-theme] (0,1,1), so it wins live with no reload. Purple = base (no rule). */
+  :root[data-accent="orange"]{ --accent:#f97316; --accent-hi:253,186,116; --accent-2:#f59e0b; --accent-rgb:249,115,22; }
+  :root[data-accent="blue"]{ --accent:#3b82f6; --accent-hi:147,197,253; --accent-2:#22d3ee; --accent-rgb:59,130,246; }
+  :root[data-accent="green"]{ --accent:#22c55e; --accent-hi:134,239,172; --accent-2:#10b981; --accent-rgb:34,197,94; }
+  :root[data-accent="rose"]{ --accent:#f43f5e; --accent-hi:253,164,175; --accent-2:#ec4899; --accent-rgb:244,63,94; }
+  :root[data-accent="cyan"]{ --accent:#06b6d4; --accent-hi:103,232,249; --accent-2:#0ea5e9; --accent-rgb:6,182,212; }
+  :root[data-accent="amber"]{ --accent:#f59e0b; --accent-hi:253,230,138; --accent-2:#eab308; --accent-rgb:245,158,11; }
+  :root[data-accent="fuchsia"]{ --accent:#d946ef; --accent-hi:240,171,252; --accent-2:#a855f7; --accent-rgb:217,70,239; }
+  :root[data-accent="teal"]{ --accent:#14b8a6; --accent-hi:94,234,212; --accent-2:#06b6d4; --accent-rgb:20,184,166; }
+  :root[data-accent="indigo"]{ --accent:#6366f1; --accent-hi:165,180,252; --accent-2:#8b5cf6; --accent-rgb:99,102,241; }
+  :root[data-accent="lime"]{ --accent:#84cc16; --accent-hi:190,242,100; --accent-2:#22c55e; --accent-rgb:132,204,22; }
+  :root[data-accent="slate"]{ --accent:#64748b; --accent-hi:203,213,225; --accent-2:#94a3b8; --accent-rgb:100,116,139; }
+  .accent-cyc .accent-dot{width:15px; height:15px; border-radius:50%; background:var(--accent);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.18), 0 2px 7px -1px rgba(var(--accent-rgb),0.85);
+    transition:background var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease)}
+  .accent-cyc:active .accent-dot{transform:scale(.9)}
+  /* Accent popup (mirrors the dashboard shell's picker, styled with public tokens). */
+  .accent-wrap{position:relative}
+  .accent-pop{position:absolute; top:calc(100% + 10px); inset-inline-end:0; width:220px; max-width:calc(100vw - 30px); background:rgba(16,16,16,0.97); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 30px 70px -28px rgba(0,0,0,0.85); padding:11px; opacity:0; visibility:hidden; transform:translateY(6px); transition:opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease), visibility var(--dur-2); z-index:70}
+  .accent-wrap.open .accent-pop{opacity:1; visibility:visible; transform:none}
+  .accent-pop-lbl{font-size:0.64rem; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-3); padding:0 2px 9px}
+  .accent-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px}
+  .accent-sw{width:100%; aspect-ratio:1; border-radius:8px; border:2px solid transparent; cursor:pointer; padding:0; position:relative; transition:transform var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.08)}
+  .accent-sw:hover{transform:scale(1.09)}
+  .accent-sw.active{border-color:#fff}
+  .accent-sw.active::after{content:""; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/13px no-repeat}
+  .accent-custom{margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft)}
+  .accent-custom-head{display:flex; align-items:center; gap:9px; padding:0 2px 10px}
+  .accent-custom-head .accent-custom-lbl{flex:1; font-size:0.64rem; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-3)}
+  .accent-custom-head .accent-prev{width:18px; height:18px; border-radius:5px; flex:0 0 auto; background:var(--accent); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12)}
+  .accent-custom-head .accent-hexv{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:0.72rem; color:var(--text-2); letter-spacing:0.02em; text-transform:lowercase}
+  .accent-sv{position:relative; width:100%; height:104px; border-radius:9px; cursor:crosshair; touch-action:none; overflow:hidden;
+    background:linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), var(--huec,#f00);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.10)}
+  .accent-thumb{position:absolute; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.5); pointer-events:none}
+  .accent-hue{position:relative; width:100%; height:14px; margin-top:10px; border-radius:7px; cursor:pointer; touch-action:none;
+    background:linear-gradient(to right,#f00 0%,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,#f00 100%);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.10)}
+  .accent-hue-thumb{position:absolute; top:50%; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; background:var(--huec,#f00); border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.5); pointer-events:none}
+  /* Smooth accent swap: the accent vars are REGISTERED (@property) so they can be transitioned at
+     the SOURCE (:root) instead of per-element. Cycling changes --accent* on <html> and they
+     interpolate over .5s, so every var() use - solid fills AND rgba washes - fades in lockstep with
+     ZERO per-element transitions. Armed only after load via .accent-ready (the initial server-set
+     paint has no prior value, so it never fades in); off under reduced-motion. */
+  @property --accent    { syntax: '<color>';   inherits: true; initial-value: #8b5cf6; }
+  @property --accent-hi { syntax: '<number>#'; inherits: true; initial-value: 194,176,255; }
+  @property --accent-2  { syntax: '<color>';   inherits: true; initial-value: #6d8bff; }
+  @property --accent-rgb{ syntax: '<number>#'; inherits: true; initial-value: 139, 92, 246; }
+  /* The accent vars are deliberately NOT transitioned at all. --accent-hi and
+     --accent-rgb are
+     '<number>#' lists, so they interpolate channel-wise through the desaturated
+     middle (orange->blue collapses saturation 95% to a near-white grey), which
+     is what made icons/borders flash white. Measured: orange->blue drove them to
+     rgb(193,192,193). The real <color> vars are no better - --accent drops 80%
+     saturation to a mid grey, which is still visible on solid fills like the
+     swatch dot (+42 whiteness over baseline, measured). sRGB channel-wise
+     interpolation ALWAYS crosses the desaturated middle, so there is no fade
+     duration that avoids it - the hue now snaps instead. */
+  html.accent-ready{ transition: none; }
+  /* One-frame transition kill used while the hue is swapped. Elements such as
+     .accent-dot and .btn transition their own `background`, so without this the
+     colour animates old->new through sRGB's desaturated middle and flashes pale
+     grey. Removed on the next frame, so hover/focus transitions still work. */
+  html.accent-swapping, html.accent-swapping *, html.accent-swapping *::before, html.accent-swapping *::after{
+    transition: none !important; animation-duration: 0s !important;
+  }
+  @media (prefers-reduced-motion: reduce){ html.accent-ready{ transition: none; } }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; -webkit-text-size-adjust:100%}
+  body{margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter','Inter Fallback',sans-serif; line-height:1.5;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden; letter-spacing:-0.011em}
+  a{color:inherit; text-decoration:none}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding-left:28px; padding-right:28px} /* longhand: .sec + .wrap share elements; shorthand would clobber the other's padding */
+  h1,h2,h3,h4{margin:0; font-weight:600; letter-spacing:-0.03em; text-wrap:balance}
+  /* No manual text selection (cleaner; copy via copy buttons). Fields + .allow-select stay selectable. */
+  body{-webkit-user-select:none; -moz-user-select:none; user-select:none; -webkit-touch-callout:none}
+  input,textarea,select,[contenteditable],.allow-select{-webkit-user-select:text; -moz-user-select:text; user-select:text; -webkit-touch-callout:default}
+  ::selection{background:rgba(var(--accent-rgb),0.35); color:#fff}
+
+  /* buttons */
+  .btn{position:relative; display:inline-flex; align-items:center; gap:8px; font-size:0.92rem; font-weight:500;
+    padding:11px 22px; border-radius:12px; cursor:pointer; border:1px solid transparent; white-space:nowrap;
+    transition:background .3s var(--ease), border-color .3s var(--ease), box-shadow .42s var(--ease), color .28s var(--ease), transform .36s var(--ease)}
+  .btn .arw{display:inline-block; transition:transform .28s var(--spring)}
+  .btn:hover .arw{transform:translateX(4px)}
+  .btn-light{background:var(--cta-bg); color:var(--cta-fg); box-shadow:inset 0 1px 0 rgba(255,255,255,0.65), 0 10px 30px -14px rgba(var(--accent-rgb),0.55)}
+  .btn-light:hover{background:var(--cta-bg-hi); transform:translateY(-1px); box-shadow:inset 0 1px 0 rgba(255,255,255,0.8), 0 16px 38px -14px rgba(var(--accent-rgb),0.8)}
+  .btn-dark{background:var(--btn2-bg); color:var(--text); border-color:var(--btn2-line); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05); -webkit-backdrop-filter:blur(16px) saturate(1.35); backdrop-filter:blur(16px) saturate(1.35)}
+  .btn-dark:hover{background:var(--btn2-bg-hi); border-color:var(--btn2-line-hi); transform:translateY(-1px)}
+  .btn-accent{background:linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0) 42%), var(--accent); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,0.28), 0 8px 30px -8px rgba(var(--accent-rgb),0.75)}
+  .btn-accent:hover{transform:translateY(-1px); box-shadow:inset 0 1px 0 rgba(255,255,255,0.34), 0 14px 40px -8px rgba(var(--accent-rgb),0.95)}
+  /* keyboard focus: a ring that fades in with the same easing as everything else */
+  :where(.btn,.tabs button,.toggle button,.qa button,.nav-mid a,.nav-right .login,.foot-col a):focus-visible{
+    outline:none; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px rgba(var(--accent-rgb),0.55)}
+  .btn-lg{padding:12px 25px; font-size:0.98rem}
+
+  /* nav */
+  header.nav{position:sticky; top:0; z-index:60; background:var(--nav-bg); backdrop-filter:blur(18px) saturate(1.4);
+    border-bottom:1px solid transparent; transition:border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease)}
+  header.nav.scrolled{border-bottom-color:var(--line-soft); background:var(--nav-bg-scrolled)}
+  .nav-in{display:flex; align-items:center; justify-content:space-between; height:66px}
+  .brand{display:flex; align-items:center; gap:9px; flex:1 1 0; min-width:0; font-weight:700; font-size:1.14rem; letter-spacing:-0.04em}
+  .brand .mark{width:26px; height:26px; display:grid; place-items:center; color:rgb(var(--accent-hi)); transition:transform .4s var(--spring)}
+  .brand:hover .mark{transform:rotate(-12deg) scale(1.08)}
+  .brand .mark svg{width:22px; height:22px}
+  .brand .d{color:var(--accent)}
+  .nav-mid{display:flex; align-items:center; gap:34px; flex:0 0 auto}
+  .nav-mid a{position:relative; color:var(--text-2); font-size:0.9rem; font-weight:500; transition:color var(--dur-1) var(--ease); padding:4px 0}
+  .nav-mid a::after{content:""; position:absolute; left:0; bottom:-2px; height:1.5px; width:100%; background:var(--accent);
+    transform:scaleX(0); transform-origin:left; transition:transform .28s var(--ease)}
+  .nav-mid a:hover{color:var(--text)} .nav-mid a:hover::after{transform:scaleX(1)}
+  .nav-right{display:flex; align-items:center; gap:10px; flex:1 1 0; justify-content:flex-end}
+  @media (max-width:900px){ .nav-mid{gap:20px} .nav-right{gap:10px} }
+  .nav-right .login{color:var(--text-2); font-size:0.9rem; font-weight:500; transition:color var(--dur-1) var(--ease)}
+  .nav-right .login:hover{color:var(--text)}
+  .nav-right .btn{padding:8px 18px; line-height:1.15} /* nav buttons a touch shorter than the base .btn */
+  /* theme toggle + language switcher */
+  .nv-icon{width:36px; height:36px; border-radius:10px; display:inline-grid; place-items:center; color:var(--text-2); border:1px solid var(--line); background:transparent; cursor:pointer; transition:background var(--dur-1) var(--ease), color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease)}
+  .nv-icon:hover{background:rgba(255,255,255,0.028); color:var(--text); border-color:var(--line)}
+  .nv-icon svg{width:17px; height:17px}
+  .theme-toggle .ic-moon{display:none}
+  html[data-theme="light"] .theme-toggle .ic-sun{display:none} html[data-theme="light"] .theme-toggle .ic-moon{display:block}
+  .lang-wrap{position:relative}
+  .lang-btn{width:auto; padding:0 10px; gap:6px}
+  .lang-btn .lang-code{font-size:0.74rem; font-weight:700; letter-spacing:0.03em}
+  .lang-pop{position:absolute; top:calc(100% + 10px); inset-inline-end:0; min-width:196px; max-width:calc(100vw - 30px); background:rgba(16,16,16,0.97); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 30px 70px -28px rgba(0,0,0,0.85); padding:6px; opacity:0; visibility:hidden; transform:translateY(6px); transition:opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease), visibility var(--dur-2); z-index:70}
+  .lang-wrap.open .lang-pop{opacity:1; visibility:visible; transform:none}
+  .lang-item{display:flex; align-items:baseline; justify-content:space-between; gap:12px; width:100%; text-align:start; background:none; border:none; padding:8px 11px; border-radius:9px; color:var(--text-2); font-size:0.9rem; cursor:pointer; transition:background var(--dur-1) var(--ease), color var(--dur-1) var(--ease)}
+  .lang-item:hover{background:var(--panel-2); color:var(--text)}
+  .lang-item.active{color:var(--text); background:rgba(var(--accent-rgb),0.1)}
+  .lang-item .lang-native{font-weight:500} .lang-item .lang-en{font-size:0.72rem; color:var(--text-3)}
+  /* mobile hamburger + slide-down drawer */
+  .nav-burger{display:none; flex-direction:column; align-items:center; justify-content:center; gap:5px; width:38px; height:38px; background:none; border:1px solid var(--line); border-radius:10px; cursor:pointer; padding:0}
+  .nav-burger span{display:block; width:17px; height:1.7px; background:var(--text-2); border-radius:2px; transition:transform var(--dur-2) var(--ease), opacity var(--dur-1) var(--ease)}
+  header.nav.menu-open .nav-burger span:nth-child(1){transform:translateY(6.7px) rotate(45deg)}
+  header.nav.menu-open .nav-burger span:nth-child(2){opacity:0}
+  header.nav.menu-open .nav-burger span:nth-child(3){transform:translateY(-6.7px) rotate(-45deg)}
+  .nav-drawer{display:none}
+
+  @media (max-width:640px){
+    .nav-in{height:58px} .nav-mid,.nav-right .login{display:none}
+    .nav-right{gap:8px} .nav-right .btn{display:none}
+    .nav-burger{display:flex}
+    .nav-drawer{display:block; position:absolute; top:100%; left:0; right:0; z-index:59; overflow:hidden; max-height:0; background:#08080c; border-bottom:1px solid transparent; box-shadow:0 24px 40px -24px rgba(0,0,0,0.9); transition:max-height var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease)}
+    header.nav.menu-open .nav-drawer{max-height:340px; border-bottom-color:var(--line-soft)}
+    .nav-drawer a{display:block; padding:14px 18px; color:var(--text-2); font-size:0.95rem; font-weight:500; border-bottom:1px solid var(--line-soft)}
+    .nav-drawer a:last-child{border-bottom:none}
+    .nav-drawer a:hover{color:var(--text); background:rgba(255,255,255,0.04)}
+    .brand{font-size:1.05rem}
+  }
+
+  /* Styled tooltip for any [title] element (matches the dashboard). */
+  .obs-tip{position:fixed; z-index:9500; pointer-events:none; max-width:250px; width:max-content;
+    background:var(--popover,#0e0e14); color:var(--text); border:1px solid var(--line); border-radius:8px;
+    padding:5px 9px; font-size:0.75rem; font-weight:500; line-height:1.35; letter-spacing:-0.004em;
+    box-shadow:0 10px 30px -10px rgba(0,0,0,0.72), 0 2px 8px -3px rgba(0,0,0,0.5);
+    opacity:0; transform:translateY(3px) scale(.97);
+    transition:opacity .13s var(--ease), transform .13s var(--ease)}
+  .obs-tip.tip-bottom{transform:translateY(-3px) scale(.97)}
+  .obs-tip.show{opacity:1; transform:none}
+  @media (prefers-reduced-motion:reduce){ .obs-tip,.obs-tip.tip-bottom{transform:none} .obs-tip{transition:opacity .1s linear} }
+  /* Auth buttons kept invisible (but space-reserved) on subdomains until /authstate
+     resolves, so Login/Get-started never flash before Dashboard. */
+  .auth-wait{visibility:hidden}
+  /* The #authOut span wraps Login + Get started, so the nav-right gap doesn't reach
+     between them - give the span its own matching gap. */
+  .auth-out{display:inline-flex; align-items:center; gap:10px}
+
+      body{ display:flex; flex-direction:column; min-height:100vh; }
+  .pp-mid{ flex:1; display:grid; place-items:center; text-align:center; padding:72px 24px 104px; position:relative; overflow:hidden; }
+  #globe{ position:absolute; top:50%; left:50%; transform:translate(-50%,-44%); width:min(860px,134vw); height:800px; z-index:0; pointer-events:none; -webkit-mask:linear-gradient(to bottom,#000 0,#000 26%,transparent 52%); mask:linear-gradient(to bottom,#000 0,#000 26%,transparent 52%); animation:globeIn .95s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes globeIn{ from{ opacity:0; transform:translate(-50%,-44%) translateY(40px); } to{ opacity:1; transform:translate(-50%,-44%); } }
+  .pp-mid h1{ margin-top:0; font-size:clamp(2.7rem,6.3vw,4.8rem); font-weight:600; line-height:1.05; letter-spacing:-0.046em; text-wrap:balance; color:#fff; }
+  .pp-desc{ margin:14px auto 0; max-width:470px; color:var(--text-2); font-size:1.02rem; line-height:1.62; }
+  .pp-desc strong{ color:var(--text); font-weight:600; }
+  .pp-actions{ margin-top:32px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .pp-foot{ padding:26px; text-align:center; font-size:0.82rem; color:var(--text-3); }
+  .pp-foot a{ color:var(--text-2); } .pp-foot a:hover{ color:var(--text); }
+  .pp-up{ animation:ppUp .6s var(--ease) both; position:relative; z-index:2; }
+  @keyframes ppUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce){ .pp-up{ animation:none; } #globe{ opacity:.55; animation:none; } }
+  @media (max-width:640px){ .pp-mid h1{ font-size:clamp(1.95rem,8.2vw,2.55rem); } }
+</style>
+</head>
+<body>
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="https://obscuravm.com/"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.5 12.5 8.5-8.5"/><path d="M16 5l3 3"/><path d="m19 8 2-2"/></svg></span>Obscura</a>
+    <nav class="nav-mid">
+      <a href="https://obscuravm.com/#features">Features</a><a href="https://obscuravm.com/#pricing">Pricing</a><a href="https://obscuravm.com/docs">Docs</a>
+    </nav>
+    <div class="nav-right">
+      <div class="lang-wrap" id="langWrap">
+        <button type="button" class="nv-icon lang-btn" id="langBtn" aria-haspopup="true" aria-expanded="false" aria-label="Language">
+          <span class="lang-code">EN</span>
+        </button>
+        <div class="lang-pop" id="langPop" role="menu">
+                      <button type="button" class="lang-item active" data-lang="en" role="menuitem" disabled aria-disabled="true"><span class="lang-native">English</span><span class="lang-en">English</span></button>
+                      <button type="button" class="lang-item" data-lang="es" role="menuitem"><span class="lang-native">Español</span><span class="lang-en">Spanish</span></button>
+                      <button type="button" class="lang-item" data-lang="pt" role="menuitem"><span class="lang-native">Português</span><span class="lang-en">Portuguese (BR)</span></button>
+                      <button type="button" class="lang-item" data-lang="fr" role="menuitem"><span class="lang-native">Français</span><span class="lang-en">French</span></button>
+                      <button type="button" class="lang-item" data-lang="ru" role="menuitem"><span class="lang-native">Русский</span><span class="lang-en">Russian</span></button>
+                      <button type="button" class="lang-item" data-lang="nl" role="menuitem"><span class="lang-native">Nederlands</span><span class="lang-en">Dutch</span></button>
+                      <button type="button" class="lang-item" data-lang="pl" role="menuitem"><span class="lang-native">Polski</span><span class="lang-en">Polish</span></button>
+                      <button type="button" class="lang-item" data-lang="de" role="menuitem"><span class="lang-native">Deutsch</span><span class="lang-en">German</span></button>
+                      <button type="button" class="lang-item" data-lang="tr" role="menuitem"><span class="lang-native">Türkçe</span><span class="lang-en">Turkish</span></button>
+                      <button type="button" class="lang-item" data-lang="id" role="menuitem"><span class="lang-native">Bahasa Indonesia</span><span class="lang-en">Indonesian</span></button>
+                      <button type="button" class="lang-item" data-lang="ar" role="menuitem"><span class="lang-native">العربية</span><span class="lang-en">Arabic</span></button>
+                  </div>
+      </div>
+      <div class="accent-wrap" id="accentWrap">
+        <button type="button" class="nv-icon accent-cyc" id="accentBtn" aria-haspopup="true" aria-expanded="false" aria-label="Accent color" title="Accent color"><span class="accent-dot"></span></button>
+        <div class="accent-pop" id="accentPop" role="menu">
+          <div class="accent-pop-lbl">Accent color</div>
+          <div class="accent-grid">
+                          <button type="button" class="accent-sw active" data-accent-set="purple" style="background:#8b5cf6" title="Purple" aria-label="Purple"></button>
+                          <button type="button" class="accent-sw" data-accent-set="orange" style="background:#f97316" title="Orange" aria-label="Orange"></button>
+                          <button type="button" class="accent-sw" data-accent-set="blue" style="background:#3b82f6" title="Blue" aria-label="Blue"></button>
+                          <button type="button" class="accent-sw" data-accent-set="green" style="background:#22c55e" title="Green" aria-label="Green"></button>
+                          <button type="button" class="accent-sw" data-accent-set="rose" style="background:#f43f5e" title="Rose" aria-label="Rose"></button>
+                          <button type="button" class="accent-sw" data-accent-set="cyan" style="background:#06b6d4" title="Cyan" aria-label="Cyan"></button>
+                          <button type="button" class="accent-sw" data-accent-set="amber" style="background:#f59e0b" title="Amber" aria-label="Amber"></button>
+                          <button type="button" class="accent-sw" data-accent-set="fuchsia" style="background:#d946ef" title="Fuchsia" aria-label="Fuchsia"></button>
+                          <button type="button" class="accent-sw" data-accent-set="teal" style="background:#14b8a6" title="Teal" aria-label="Teal"></button>
+                          <button type="button" class="accent-sw" data-accent-set="indigo" style="background:#6366f1" title="Indigo" aria-label="Indigo"></button>
+                          <button type="button" class="accent-sw" data-accent-set="lime" style="background:#84cc16" title="Lime" aria-label="Lime"></button>
+                          <button type="button" class="accent-sw" data-accent-set="slate" style="background:#64748b" title="Slate" aria-label="Slate"></button>
+                      </div>
+          <div class="accent-custom" id="accentCustom" data-init="#8b5cf6">
+            <div class="accent-custom-head">
+              <span class="accent-custom-lbl">Custom color</span>
+              <span class="accent-hexv" id="accentHexV">#8b5cf6</span>
+              <span class="accent-prev" id="accentPrev"></span>
+            </div>
+            <div class="accent-sv" id="accentSV"><span class="accent-thumb" id="accentThumb"></span></div>
+            <div class="accent-hue" id="accentHue"><span class="accent-hue-thumb" id="accentHueThumb"></span></div>
+          </div>
+        </div>
+      </div>
+      <span id="authOut" class="auth-out"><a class="login" href="https://obscuravm.com/login">Login</a><a class="btn btn-light" href="https://obscuravm.com/login?tab=register">Get started</a></span><a id="authIn" class="btn btn-light" href="https://obscuravm.com/dashboard" style="display:none">Dashboard</a>      <button type="button" class="nav-burger" id="navBurger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="nav-drawer" id="navDrawer">
+    <a href="https://obscuravm.com/#features">Features</a><a href="https://obscuravm.com/#pricing">Pricing</a><a href="https://obscuravm.com/docs">Docs</a>
+    <span id="authOutD" class=""><a href="https://obscuravm.com/login">Login</a><a href="https://obscuravm.com/login?tab=register">Get started</a></span><a id="authInD" href="https://obscuravm.com/dashboard" style="display:none">Dashboard</a>  </div>
+</header>
+
+    <main class="pp-mid">
+  <canvas id="globe" aria-hidden="true"></canvas>
+  <div class="pp-up">
+    <h1>Protected by Obscura</h1>
+    <p class="pp-desc" data-i18n-html="This is an Obscura-protected endpoint. It only responds to the script it belongs to at runtime and is served through the &lt;strong&gt;Obscura Protection API&lt;/strong&gt;. There is nothing to view here.">This is an Obscura-protected endpoint. It only responds to the script it belongs to at runtime and is served through the <strong>Obscura Protection API</strong>. There is nothing to view here.</p>
+    <div class="pp-actions">
+            <a href="https://obscuravm.com/" class="btn btn-light">Back to home</a>
+      <a href="https://discord.gg/obscuravm" class="btn btn-dark" target="_blank" rel="noopener">Get help on Discord</a>
+          </div>
+  </div>
+</main>
+<footer class="pp-foot">&copy; 2026 Obscura</footer>
+<script>  // Styled tooltip for any [title] element (matches the dashboard: swaps the native
+  // title for an .obs-tip bubble on hover, fine-pointer only).
+  (function(){
+    if(!window.matchMedia || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    var tip=null, timer=null, target=null;
+    function bubble(){ if(!tip){ tip=document.createElement('div'); tip.className='obs-tip'; tip.setAttribute('role','tooltip'); document.body.appendChild(tip); } return tip; }
+    function place(el, text){
+      var t=bubble(); t.textContent=text; t.className='obs-tip'; t.style.left='0px'; t.style.top='0px';
+      var pad=6, gap=8, r=el.getBoundingClientRect(), tw=t.offsetWidth, th=t.offsetHeight;
+      var below=(r.top - th - gap) < pad;
+      var top=below ? (r.bottom + gap) : (r.top - th - gap);
+      var left=Math.max(pad, Math.min(r.left + r.width/2 - tw/2, window.innerWidth - tw - pad));
+      t.style.left=Math.round(left)+'px'; t.style.top=Math.round(top)+'px';
+      t.classList.add(below ? 'tip-bottom' : 'tip-top'); void t.offsetWidth; t.classList.add('show');
+    }
+    function hide(){ if(timer){ clearTimeout(timer); timer=null; } if(tip) tip.classList.remove('show');
+      if(target && target.__obsTip!=null){ target.setAttribute('title', target.__obsTip); target.__obsTip=null; } target=null; }
+    document.addEventListener('mouseover', function(e){
+      var el=e.target.closest ? e.target.closest('[title]') : null;
+      if(!el || el===target) return;
+      var text=(el.getAttribute('title')||'').trim(); if(!text) return;
+      hide(); target=el; el.__obsTip=text; el.removeAttribute('title');
+      timer=setTimeout(function(){ if(target===el) place(el, text); }, 90);
+    });
+    document.addEventListener('mouseout', function(e){
+      if(!target) return; var to=e.relatedTarget;
+      if(to && (to===target || target.contains(to))) return; hide();
+    });
+    ['mousedown','wheel','keydown'].forEach(function(ev){ document.addEventListener(ev, hide, true); });
+    window.addEventListener('scroll', hide, true); window.addEventListener('blur', hide);
+  })();
+  // Cross-origin login-state sync: on subdomains (protected.*) the apex session
+  // cookie may not reach us, so ask the apex directly - the credentialed request
+  // carries the apex cookie there regardless of its scope - and swap the
+  // Login/Get-started buttons for Dashboard when the visitor is actually logged in.
+  (function(){
+    var out=document.getElementById('authOut'); if(!out) return;               // only when server-rendered logged-out
+    var outD=document.getElementById('authOutD'), aIn=document.getElementById('authIn'), aInD=document.getElementById('authInD');
+    // reveal the Login/Get-started set (was space-reserved but hidden on subdomains)
+    function showOut(){ out.classList.remove('auth-wait'); if(outD) outD.classList.remove('auth-wait'); }
+    // swap to the Dashboard button
+    function showIn(){ out.style.display='none'; if(outD) outD.style.display='none';
+      if(aIn){ aIn.style.display=''; } if(aInD){ aInD.style.display=''; } }
+    if(!/(^|\.)obscuravm\.com$/.test(location.hostname)){ showOut(); return; } // dev/other host: trust server
+    var done=false;
+    // never leave the buttons stuck hidden if the probe hangs/fails
+    var to=setTimeout(function(){ if(!done){ done=true; showOut(); } }, 1500);
+    try{
+      fetch('https://obscuravm.com/authstate',{credentials:'include',cache:'no-store'})
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){ if(done) return; done=true; clearTimeout(to); if(d&&d.in) showIn(); else showOut(); })
+        .catch(function(){ if(!done){ done=true; clearTimeout(to); showOut(); } });
+    }catch(e){ if(!done){ done=true; clearTimeout(to); showOut(); } }
+  })();
+  // language switcher (open/close; pick a language -> set cookie + reload)
+  // Only one nav dropdown (language / accent) open at a time.
+  window.pubCloseMenus = function(except){
+    ['langWrap','accentWrap'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el && el!==except && el.classList.contains('open')){
+        el.classList.remove('open');
+        var btn=el.querySelector('[aria-expanded]'); if(btn) btn.setAttribute('aria-expanded','false');
+      }
+    });
+  };
+  (function(){
+    var w=document.getElementById('langWrap'), b=document.getElementById('langBtn'); if(!w||!b) return;
+    b.addEventListener('click',function(e){ e.stopPropagation(); if(!w.classList.contains('open')) window.pubCloseMenus(w); var o=w.classList.toggle('open'); b.setAttribute('aria-expanded',o?'true':'false'); });
+    document.addEventListener('click',function(e){ if(!w.contains(e.target)){ w.classList.remove('open'); b.setAttribute('aria-expanded','false'); } });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') w.classList.remove('open'); });
+    w.querySelectorAll('.lang-item').forEach(function(it){ it.addEventListener('click',function(){
+      var c=it.getAttribute('data-lang')||'en';
+      if(it.disabled || it.classList.contains('active')) return;          // already on it
+      try{ (function(v){var d=location.hostname.match(/(^|\.)obscuravm\.com$/)?';domain=.obscuravm.com':'';document.cookie='obs_lang=;path=/;max-age=0;samesite=lax';document.cookie='obs_lang='+v+';path=/;max-age=31536000;samesite=lax'+d;})(c); }catch(e){}
+      /* Pages with server-rendered per-language content (e.g. the legal pages, whose
+         body is loaded from legal/<doc>.<lang>.php) can't be translated in place, so
+         reload to fetch the chosen language instead. */
+      if(document.documentElement.hasAttribute('data-i18n-reload')){ location.reload(); return; }
+      /* Translate in place, like the accent switch. The cookie makes it stick for the
+         next navigation; this brings the current page into line without a reload. */
+      var fin=function(){
+        w.querySelectorAll('.lang-item').forEach(function(x){
+          var on=x.getAttribute('data-lang')===c;
+          x.classList.toggle('active',on); x.disabled=on;
+          if(on) x.setAttribute('aria-disabled','true'); else x.removeAttribute('aria-disabled');
+        });
+        var lc=w.querySelector('.lang-code'); if(lc) lc.textContent=c.toUpperCase();
+        try{ document.documentElement.setAttribute('lang',c); }catch(e){}
+        w.classList.remove('open'); b.setAttribute('aria-expanded','false');
+      };
+      if(!(window.Obscura&&window.Obscura.switchLang)){ location.reload(); return; }
+      fetch('/langmap?lang='+encodeURIComponent(c),{credentials:'same-origin'})
+        .then(function(r){ if(!r.ok) throw new Error('bad'); return r.json(); })
+        .then(function(m){ window.Obscura.switchLang(m); fin(); })
+        .catch(function(){ location.reload(); });
+    }); });
+  })();
+
+  // accent cycler (swatch button next to the language switcher): advance the accent hue, set
+  /* OKLCH accent tween.
+  
+     CSS cannot give us a smooth accent swap without washing out: a transition on
+     any of the accent vars interpolates in sRGB, and the straight line between two
+     saturated hues passes through the desaturated middle - measured at 1% chroma
+     for orange->blue, a near-white grey. Measured alternatives: a <color> written
+     in oklch() still interpolates in sRGB (17%), and color-mix over a transitioned
+     var is no better (10%). Only rotating the HUE keeps chroma up (54%).
+  
+     So the tween runs here instead: interpolate in OKLCH (shortest hue arc, chroma
+     and lightness eased independently) and write the SAME variable formats the CSS
+     already expects - #rrggbb for --accent/--accent-2, "r, g, b" for --accent-hi
+     and --accent-rgb. Nothing downstream changes; all ~268 existing var() uses
+     keep working untouched.
+  
+     Element-level transitions stay suppressed for the duration (html.accent-swapping)
+     so nothing lags behind or re-interpolates the frames in sRGB. */
+  (function () {
+    var VARS = ['--accent', '--accent-hi', '--accent-2', '--accent-rgb'];
+    var LIST = { '--accent-hi': 1, '--accent-rgb': 1 };   // these are bare "r, g, b" lists
+  
+    function srgbToLin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+    function linToSrgb(c) { var v = c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+      return Math.max(0, Math.min(255, Math.round(v * 255))); }
+  
+    function rgbToOklch(r, g, b) {
+      var lr = srgbToLin(r), lg = srgbToLin(g), lb = srgbToLin(b);
+      var l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+      var m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+      var s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+      var L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+      var A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+      var B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+      var C = Math.sqrt(A * A + B * B);
+      var H = Math.atan2(B, A) * 180 / Math.PI; if (H < 0) H += 360;
+      return [L, C, H];
+    }
+    function oklchRaw(L, C, H) {
+      var h = H * Math.PI / 180, A = Math.cos(h) * C, B = Math.sin(h) * C;
+      var l = L + 0.3963377774 * A + 0.2158037573 * B;
+      var m = L - 0.1055613458 * A - 0.0638541728 * B;
+      var s = L - 0.0894841775 * A - 1.2914855480 * B;
+      l = l * l * l; m = m * m * m; s = s * s * s;
+      return [
+         4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+        -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+        -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+      ];
+    }
+    function inGamut(lin) {
+      for (var i = 0; i < 3; i++) if (lin[i] < -0.0001 || lin[i] > 1.0001) return false;
+      return true;
+    }
+    /* Gamut-map by REDUCING CHROMA, not by clamping channels.
+       The accent tints sit near L=85%, where a vivid intermediate hue can fall
+       outside sRGB. Clamping each channel independently pushes such a colour
+       toward white - which put a residual pale flash back on .pc-key-ic. Binary-
+       searching the largest in-gamut chroma keeps the hue and lightness and simply
+       makes the step slightly less vivid, which is imperceptible. */
+    function oklchToRgb(L, C, H) {
+      var lin = oklchRaw(L, C, H);
+      if (!inGamut(lin)) {
+        var lo = 0, hi = C;
+        for (var i = 0; i < 12; i++) {
+          var mid = (lo + hi) / 2;
+          if (inGamut(oklchRaw(L, mid, H))) lo = mid; else hi = mid;
+        }
+        lin = oklchRaw(L, lo, H);
+      }
+      return [linToSrgb(lin[0]), linToSrgb(lin[1]), linToSrgb(lin[2])];
+    }
+  
+    /* Accepts "#rrggbb", "rgb(r, g, b)" or a bare "r, g, b" list. */
+    function parse(v) {
+      v = String(v).trim();
+      var m = v.match(/^#([0-9a-f]{6})$/i);
+      if (m) { var n = parseInt(m[1], 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+      var nums = v.match(/-?\d*\.?\d+/g);
+      return nums && nums.length >= 3 ? [ +nums[0], +nums[1], +nums[2] ] : null;
+    }
+    function hex(rgb) {
+      return '#' + rgb.map(function (c) { return ('0' + c.toString(16)).slice(-2); }).join('');
+    }
+  
+    var live = null;   // in-flight tween, so a second click cannot race the first
+  
+    window.obsAccentTween = function (root, applyTarget, ms) {
+      ms = ms || 420;
+  
+      /* Cancel any tween still running. Without this, clicking again mid-fade left
+         two rAF loops writing the same variables, and whichever finished first
+         stripped the inline values and cleared accent-swapping while the other was
+         still mid-flight - leaving the class stuck and colours fighting. */
+      if (live) { cancelAnimationFrame(live.raf); live.done(); live = null; }
+  
+      var cs = getComputedStyle(root);
+      var from = {};
+      VARS.forEach(function (v) { from[v] = parse(cs.getPropertyValue(v)); });
+  
+      root.classList.add('accent-swapping');   // suppress element transitions for the whole tween
+      applyTarget();                            // sets data-accent -> vars snap to the new palette
+      void root.offsetWidth;
+  
+      var cs2 = getComputedStyle(root), to = {};
+      VARS.forEach(function (v) { to[v] = parse(cs2.getPropertyValue(v)); });
+  
+      // If anything failed to parse, leave the snapped value in place.
+      var usable = VARS.filter(function (v) { return from[v] && to[v]; });
+      if (!usable.length || !window.requestAnimationFrame) {
+        root.classList.remove('accent-swapping'); return;
+      }
+  
+      var lch = {};
+      usable.forEach(function (v) {
+        var a = rgbToOklch(from[v][0], from[v][1], from[v][2]);
+        var b = rgbToOklch(to[v][0], to[v][1], to[v][2]);
+        var dh = b[2] - a[2];                       // shortest arc, so the fade never detours
+        if (dh > 180) dh -= 360; else if (dh < -180) dh += 360;
+        lch[v] = { a: a, b: b, dh: dh };
+      });
+  
+      var t0 = performance.now();
+      var ease = function (t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; };
+  
+      var finish = function () {
+        usable.forEach(function (v) { root.style.removeProperty(v); });   // hand back to the stylesheet
+        root.classList.remove('accent-swapping');
+      };
+      var self = { raf: 0, done: finish };
+      live = self;
+  
+      (function step(now) {
+        var p = Math.min(1, (now - t0) / ms), e = ease(p);
+        usable.forEach(function (v) {
+          var s = lch[v];
+          var L = s.a[0] + (s.b[0] - s.a[0]) * e;
+          var C = s.a[1] + (s.b[1] - s.a[1]) * e;
+          var H = s.a[2] + s.dh * e;
+          var rgb = oklchToRgb(L, C, H);
+          root.style.setProperty(v, LIST[v] ? rgb.join(', ') : hex(rgb));
+        });
+        if (p < 1) self.raf = requestAnimationFrame(step);
+        else { if (live === self) live = null; finish(); }
+      })(t0);
+    };
+  })();
+
+
+  // data-accent on <html> + the obs_accent cookie. The fade is done by obsAccentTween
+  // in OKLCH - a CSS transition on the vars interpolates in sRGB and washes out to
+  // grey mid-way (measured 1% chroma orange->blue), which is the old white flash.
+  // Accent popup: 10 named swatches + an inline HSV picker. Same design and perf
+  // model as the dashboard shell - the picker lives in the popup (no OS window), the
+  // drag only repaints the picker's own local UI at full framerate, and the expensive
+  // site-wide accent apply (inherited @property vars = whole-tree recalc) is self-paced.
+  (function(){
+    var w=document.getElementById('accentWrap'), b=document.getElementById('accentBtn'); if(!w||!b) return;
+    var d=document.documentElement; d.classList.add('accent-ready');
+    function setCookie(v){ try{ var dm=location.hostname.match(/(^|\.)obscuravm\.com$/)?';domain=.obscuravm.com':''; document.cookie='obs_accent=;path=/;max-age=0;samesite=lax'; document.cookie='obs_accent='+v+';path=/;max-age=31536000;samesite=lax'+dm; }catch(e){} }
+    function mark(sel){ var sw=w.querySelectorAll('.accent-sw[data-accent-set]'); for(var i=0;i<sw.length;i++) sw[i].classList.toggle('active', sw[i].getAttribute('data-accent-set')===sel); }
+    function clearInline(){ var s=d.style; ['--accent','--accent-rgb','--accent-hi','--accent-2'].forEach(function(p){ s.removeProperty(p); }); }
+    function setVars(hex){ var r=parseInt(hex.substr(1,2),16),g=parseInt(hex.substr(3,2),16),bl=parseInt(hex.substr(5,2),16);
+      var hr=Math.round(r+(255-r)*0.5),hg=Math.round(g+(255-g)*0.5),hb=Math.round(bl+(255-bl)*0.5); var s=d.style;
+      s.setProperty('--accent',hex); s.setProperty('--accent-rgb',r+','+g+','+bl); s.setProperty('--accent-hi',hr+','+hg+','+hb); s.setProperty('--accent-2',hex);
+      d.setAttribute('data-accent','custom'); }
+
+    b.addEventListener('click',function(e){ e.stopPropagation(); if(!w.classList.contains('open') && window.pubCloseMenus) window.pubCloseMenus(w); var o=w.classList.toggle('open'); b.setAttribute('aria-expanded',o?'true':'false'); });
+    document.addEventListener('click',function(e){ if(!w.contains(e.target)){ w.classList.remove('open'); b.setAttribute('aria-expanded','false'); } });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') w.classList.remove('open'); });
+
+    var sw=w.querySelectorAll('.accent-sw[data-accent-set]');
+    for(var i=0;i<sw.length;i++){ (function(el){ el.addEventListener('click',function(){ var hue=el.getAttribute('data-accent-set');
+      d.classList.add('accent-swapping'); clearInline(); d.setAttribute('data-accent',hue); void d.offsetWidth;
+      requestAnimationFrame(function(){ d.classList.remove('accent-swapping'); }); setCookie(hue); mark(hue); }); })(sw[i]); }
+
+    var custom=document.getElementById('accentCustom');
+    if(custom){
+      var svEl=document.getElementById('accentSV'), thumb=document.getElementById('accentThumb'),
+          hueEl=document.getElementById('accentHue'), hueThumb=document.getElementById('accentHueThumb'),
+          prev=document.getElementById('accentPrev'), hexv=document.getElementById('accentHexV');
+      var H=270, S=0.6, V=0.9;
+      function hsvToRgb(h,s,v){ h/=60; var c=v*s, x=c*(1-Math.abs(h%2-1)), m=v-c, r=0,g=0,bb=0;
+        if(h<1){r=c;g=x;} else if(h<2){r=x;g=c;} else if(h<3){g=c;bb=x;} else if(h<4){g=x;bb=c;} else if(h<5){r=x;bb=c;} else {r=c;bb=x;}
+        return [Math.round((r+m)*255),Math.round((g+m)*255),Math.round((bb+m)*255)]; }
+      function rgbToHsv(r,g,bl){ r/=255;g/=255;bl/=255; var mx=Math.max(r,g,bl),mn=Math.min(r,g,bl),df=mx-mn,h=0;
+        if(df){ if(mx===r)h=((g-bl)/df)%6; else if(mx===g)h=(bl-r)/df+2; else h=(r-g)/df+4; h*=60; if(h<0)h+=360; }
+        return [h, mx?df/mx:0, mx]; }
+      function hx2(n){ n=Math.max(0,Math.min(255,n|0)); return (n<16?'0':'')+n.toString(16); }
+      function curHex(){ var rgb=hsvToRgb(H,Math.max(0,Math.min(.9,S)),Math.max(.35,Math.min(.82,V))); return '#'+hx2(rgb[0])+hx2(rgb[1])+hx2(rgb[2]); }
+      function paintLocal(){ var pure=hsvToRgb(H,1,1);
+        custom.style.setProperty('--huec','rgb('+pure[0]+','+pure[1]+','+pure[2]+')');
+        thumb.style.left=(S*100)+'%'; thumb.style.top=((1-V)*100)+'%'; hueThumb.style.left=(H/360*100)+'%';
+        var hx=curHex(); if(prev) prev.style.background=hx; if(hexv) hexv.textContent=hx; }
+      var liveBusy=false, liveHex=null;
+      function liveCommit(){ liveHex=curHex(); if(liveBusy) return; liveBusy=true;
+        requestAnimationFrame(function(){ var hx=liveHex; setVars(hx); mark('');
+          requestAnimationFrame(function(){ liveBusy=false; if(liveHex!==hx) liveCommit(); }); }); }
+      function commit(){ var hx=curHex(); setVars(hx); mark(''); setCookie(hx); }
+      function seed(hx){ if(!/^#?[0-9a-f]{6}$/i.test(hx)) return; hx=hx.replace('#','');
+        var hsv=rgbToHsv(parseInt(hx.substr(0,2),16),parseInt(hx.substr(2,2),16),parseInt(hx.substr(4,2),16));
+        H=hsv[0]; S=hsv[1]; V=hsv[2]; paintLocal(); }
+      seed(custom.getAttribute('data-init')||'#8b5cf6');
+      function drag(el,onMove){ el.addEventListener('pointerdown',function(e){ e.preventDefault(); try{ el.setPointerCapture(e.pointerId); }catch(_){}
+        var move=function(ev){ var r=el.getBoundingClientRect();
+          onMove(Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width)), Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height))); paintLocal(); liveCommit(); };
+        move(e);
+        var up=function(){ el.removeEventListener('pointermove',move); el.removeEventListener('pointerup',up); el.removeEventListener('pointercancel',up); commit(); };
+        el.addEventListener('pointermove',move); el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); }); }
+      drag(svEl, function(x,y){ S=x; V=1-y; });
+      drag(hueEl, function(x){ H=x*360; });
+    }
+  })();
+
+
+  (function(){
+    var b=document.getElementById('navBurger'), nav=document.getElementById('nav'), dr=document.getElementById('navDrawer');
+    if(!b||!nav) return;
+    function close(){ nav.classList.remove('menu-open'); b.setAttribute('aria-expanded','false'); }
+    b.addEventListener('click',function(e){ e.stopPropagation(); var open=nav.classList.toggle('menu-open'); b.setAttribute('aria-expanded',open?'true':'false'); });
+    if(dr) dr.addEventListener('click',function(e){ if(e.target.closest('a')) close(); });
+    document.addEventListener('click',function(e){ if(!nav.contains(e.target)) close(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+
+  // nav shadow on scroll (landing parity)
+  (function(){ var n=document.getElementById('nav'); if(!n) return;
+    addEventListener('scroll',function(){ n.classList.toggle('scrolled', scrollY>8); }, {passive:true}); })();
+      
+  (function(){
+    var cv=document.getElementById('globe'); if(!cv) return;
+    var reduce=false; try{ reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+    var ctx=cv.getContext('2d'), DPR=Math.min(devicePixelRatio||1,2), W,H;
+    function size(){ W=cv.width=Math.max(1,cv.clientWidth)*DPR; H=cv.height=Math.max(1,cv.clientHeight)*DPR; }
+    size(); addEventListener('resize',size);
+    var TILT=0.5, ct=Math.cos(TILT), st=Math.sin(TILT), rot=0.0, pts=[];
+    function uniformGrid(){
+      var g=[], LAT=34;
+      for(var i=1;i<LAT;i++){
+        var phi=Math.PI*(i/LAT)-Math.PI/2, sy=Math.sin(phi), r=Math.cos(phi);
+        var lonN=Math.max(4, Math.round(66*r));
+        for(var j=0;j<lonN;j++){ var th=2*Math.PI*(j/lonN); g.push([Math.cos(th)*r, sy, Math.sin(th)*r]); }
+      }
+      return g;
+    }
+    function buildLand(countries){
+      var MW=1000, MH=500;
+      var off=document.createElement('canvas'); off.width=MW; off.height=MH;
+      var o=off.getContext('2d'); o.scale(MW/2000, MH/1000); o.fillStyle='#fff';
+      for(var c=0;c<countries.length;c++){ if(countries[c]&&countries[c].d){ try{ o.fill(new Path2D(countries[c].d)); }catch(e){} } }
+      var d=o.getImageData(0,0,MW,MH).data;
+      function land(lat,lng){
+        var px=((lng+180)/360*MW)|0, py=((90-lat)/180*MH)|0;
+        if(px<0)px=0; else if(px>=MW)px=MW-1;
+        if(py<0)py=0; else if(py>=MH)py=MH-1;
+        return d[(py*MW+px)*4+3] > 40;
+      }
+      var g=[], N=12000, GA=Math.PI*(3-Math.sqrt(5));
+      for(var i=0;i<N;i++){
+        var y=1-(i/(N-1))*2, r=Math.sqrt(Math.max(0,1-y*y)), th=i*GA;
+        var x=Math.cos(th)*r, z=Math.sin(th)*r;
+        if(land(Math.asin(y)*57.2958, Math.atan2(x,z)*57.2958)) g.push([x,y,z]);
+      }
+      return g.length>300 ? g : uniformGrid();
+    }
+    pts=uniformGrid();
+    fetch('/assets/worldmap.json').then(function(r){return r.ok?r.json():null;}).then(function(j){
+      if(Array.isArray(j)){ var g=buildLand(j); if(g.length>300) pts=g; }
+    }).catch(function(){});
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      var cx=W/2, cy=H*0.54, R=Math.min(W,H)*0.5;
+      var cr=Math.cos(rot), sr=Math.sin(rot);
+      var accent=getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb');
+      for(var i=0;i<pts.length;i++){
+        var p=pts[i];
+        var x1=p[0]*cr - p[2]*sr, z1=p[0]*sr + p[2]*cr, y1=p[1];
+        var y2=y1*ct - z1*st, z2=y1*st + z1*ct;
+        if(z2 < -0.2) continue;
+        var depth=(z2+1)/2, edge=1-Math.abs(z2);
+        var sx=cx + x1*R, sy=cy - y2*R, sz=(0.5+depth*1.05)*DPR;
+        var a=0.05 + depth*0.62;
+        ctx.beginPath(); ctx.arc(sx,sy,sz,0,6.2832);
+        ctx.fillStyle = edge>0.72 ? 'rgba('+accent+','+(a*1.4)+')' : 'rgba('+accent+','+(a*0.9)+')';
+        ctx.fill();
+      }
+      if(!reduce) rot+=0.0016;
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a34359656bb0c4a2',t:'MTc4ODI1NjAwMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

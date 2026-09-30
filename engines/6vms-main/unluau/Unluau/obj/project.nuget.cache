@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "JGlM07TjQMw=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Gian Ada\\Downloads\\6Vms\\6Vms\\unluau\\Unluau\\Unluau.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Gian Ada\\.nuget\\packages\\serilog\\3.1.1\\serilog.3.1.1.nupkg.sha512",
+    "C:\\Users\\Gian Ada\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.36\\microsoft.netcore.app.ref.6.0.36.nupkg.sha512",
+    "C:\\Users\\Gian Ada\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.36\\microsoft.windowsdesktop.app.ref.6.0.36.nupkg.sha512",
+    "C:\\Users\\Gian Ada\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.36\\microsoft.aspnetcore.app.ref.6.0.36.nupkg.sha512"
+  ],
+  "logs": []
+}

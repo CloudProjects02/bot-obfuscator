@@ -1,0 +1,51 @@
+local ll1lI1Illl1lIl1IIlIIl1IlI = {
+	["II1lIII1lII1111IllI1I11ll"] = "A6C6F63",
+	["I11lllIIl11IIlII1lIIl1lII"] = "string",
+	["llIl111I1l1I1II1lll1I1Il1"] = "do",
+	["lIlIII1IIIl1l1llIII1III11"] = "II1IlI1lI1ll1l1Il11lIIlI1",
+	["IllIIlllIlI11IIll1llIll1I"] = "D2035",
+	["l1111ll1I1Illl11I11l111ll"] = "table",
+	["Il1Il11lIIlIlIl1111III11I"] = "E742846",
+	["lI11I1l1IlIIlIIllII1Il1l1"] = "true",
+	["Il1llIIl1l1l1I11lIllll1I1"] = "pairs",
+	["I1I111I1111lllll1IlllI1ll"] = "return",
+	["lIll1IlII1IlI1111llIIl1lI"] = "F2074",
+	["IIII11II11I1lIll111lI111l"] = "ipairs",
+	["llllIlll1II1lIII111IlII1I"] = "char",
+	["llIl1IIl1llIIl1II1llIl1lI"] = "concat",
+	["lII1l1ll1lllIll11II1lll1I"] = "local",
+	["IlI1Il1IlII1I1I1lI1I1111l"] = "E7368",
+	["lll1I1lII1lI1ll1l1111lll1"] = "load",
+	["IllI1IIIll11l1llI11I1IlII"] = "else",
+	["lI1I1l11IllIIIlIlII1I1lI1"] = "function",
+	["l1IlI1l1l11l1ll1I111l1IlI"] = "_err",
+	["IllIIIlIIII11ll1I1llIlIll"] = "C2046",
+	["llII1lIllI1l1I1I1III1llII"] = "end",
+	["l11Il1IIII1lI11Il1lIll1II"] = "_exec",
+	["lll1l1I11l1l1111II1IIIlIl"] = "tonumber",
+	["I1llIll1lIIl1l1IIII1I1I11"] = "pcall",
+	["l1lI1ll11ll1IlllIlIlI1lll"] = "B2034",
+	["l11I1111Il1l11ll1l1lIlIll"] = "l11lIIll1I11llllII1I1IIIl",
+	["I11llI11lII11I1l111l11lI1"] = "C6F6361",
+	["IIIlI111II11111l1IllIIl1l"] = "l1Il1IIIl11l1lIIIIII1l1l1",
+	["l1IlIlllI11IIlI1111l1111l"] = "l11lll1l1l1I1111lIl111II1",
+	["IllIIlI1IllllllI1Il1lI11l"] = "F283129",
+	["llI11I1IlIIlIIIll111lllI1"] = "E6765",
+	["I111I1l1lI11llIlllll1llI1"] = "if",
+	["llII11ll1I1lIIllI111II1lI"] = "loadstring",
+	["l11l111l1I1llllIIIllI1lIl"] = "for",
+	["IIl1ll11IllI1IIl1lIlII1II"] = "while",
+	["lII11lIIIlI1llIIIlI11II11"] = "E2077",
+	["lI1llIIl1lI1IIIII1lllII1l"] = "A707269",
+	["lIIIIl1111II1I1lIlIIl11ll"] = "F72745F",
+	["llIlIlIll11l1IIIIII11Il1l"] = "C20663D",
+	["l1IlI1ll1lIl1llI1Il1l11Il"] = "in",
+	["I1IlIl1I11IlIIlIll1I11I1l"] = "then"
+}
+local function ll1lll1lll1Il1I11IlIlIl11(s)
+	for k, v in pairs(ll1lI1Illl1lIl1IIlIIl1IlI) do
+		s = s:gsub(k, v)
+	end
+	return s
+end
+print(ll1lll1lll1Il1I11IlIlIl11("lII1l1ll1lllIll11II1lll1I II1IlI1lI1ll1l1Il11lIIlI1 = {[27]='20656E64',[19]='66696E64',[29]='20656E64',[11]='64656275',[2]='65627567',[26]='6520646F',[4]='20646562',[17]='6lIIIIl1111II1I1lIlIIl11ll',[34]='0A707269',[14]='6F283129',[13]='74696E66',[31]='616C2046',[16]='662E7368',[7]='666F2074',[18]='7372633A',[32]='203D2035',[9]='6C6F6361',[1]='69662064',[36]='290A',[15]='20696620',[20]='28276465',[33]='202B2034',[10]='6llIlIlIll11l1IIIIII11Il1l',[21]='62756727',[6]='6574696E',[30]='0A6C6F63',[5]='75672E67',[25]='20747275',[23]='656E2077',[35]='6E742846',[24]='68696C65',[3]='20616E64',[28]='20656E64',[12]='672E6765',[8]='68656E20',[22]='29207468',}\ lII1l1ll1lllIll11II1lll1I l11lll1l1l1I1111lIl111II1 = {}\ l11l111l1I1llllIIIllI1lIl i=1, #II1IlI1lI1ll1l1Il11lIIlI1 llIl111I1l1I1II1lll1I1Il1 l11lll1l1l1I1111lIl111II1[i] = II1IlI1lI1ll1l1Il11lIIlI1[i] llII1lIllI1l1I1I1III1llII\ lII1l1ll1lllIll11II1lll1I l1Il1IIIl11l1lIIIIII1l1l1 = l1111ll1I1Illl11I11l111ll.llIl1IIl1llIIl1II1llIl1lI(l11lll1l1l1I1111lIl111II1)\ lII1l1ll1lllIll11II1lll1I lI1I1l11IllIIIlIlII1I1lI1 l11I1111Il1l11ll1l1lIlIll(h)\ lII1l1ll1lllIll11II1lll1I r, c, n = {}, 1, I11lllIIl11IIlII1lIIl1lII.llllIlll1II1lIII111IlII1I\ l11l111l1I1llllIIIllI1lIl i=1, #h, 2 llIl111I1l1I1II1lll1I1Il1\ r[c] = n(lll1l1I11l1l1111II1IIIlIl(h:sub(i, i+1), 16))\ c = c + 1\ llII1lIllI1l1I1I1III1llII\ I1I111I1111lllll1IlllI1ll l1111ll1I1Illl11I11l111ll.llIl1IIl1llIIl1II1llIl1lI(r)\ llII1lIllI1l1I1I1III1llII\ lII1l1ll1lllIll11II1lll1I l11Il1IIII1lI11Il1lIll1II, l1IlI1l1l11l1ll1I111l1IlI = I1llIll1lIIl1l1IIII1I1I11(lI1I1l11IllIIIlIlII1I1lI1() \ I1I111I1111lllll1IlllI1ll (llII11ll1I1lIIllI111II1lI or lll1I1lII1lI1ll1l1111lll1)(l11I1111Il1l11ll1l1lIlIll(l1Il1IIIl11l1lIIIIII1l1l1))() \ llII1lIllI1l1I1I1III1llII)\ I111I1l1lI11llIlllll1llI1 not l11Il1IIII1lI11Il1lIll1II I1IlIl1I11IlIIlIll1I11I1l IIl1ll11IllI1IIl1lIlII1II lI11I1l1IlIIlIIllII1Il1l1 llIl111I1l1I1II1lll1I1Il1 llII1lIllI1l1I1I1III1llII llII1lIllI1l1I1I1III1llII\ "))
