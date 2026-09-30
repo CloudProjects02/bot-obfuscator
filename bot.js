@@ -31,7 +31,8 @@ const GUILD_ID  = process.env.GUILD_ID || '1531394302956011603';
 // Set MEMBER_ROLE_ID in .env — if blank, tag check is skipped for all
 const MEMBER_ROLE_ID = process.env.MEMBER_ROLE_ID || '';
 
-const ALLOWED_CHANNEL_ID = '1531399709246357594';
+const ALLOWED_CHANNEL_ID    = '1531399709246357594';
+const SUBMIT_LOG_CHANNEL_ID = process.env.SUBMIT_LOG_CHANNEL_ID || '';
 
 const LIMIT_REGULAR = 6;
 const LIMIT_BOOSTER = 20;
@@ -244,7 +245,8 @@ function saveUsage(data) {
 function checkAndConsumeLimit(userId, isBooster, isAdmin, consume = false) {
   if (isAdmin) return { allowed: true, remaining: Infinity, limit: Infinity };
 
-  const limit = isBooster ? LIMIT_BOOSTER : LIMIT_REGULAR;
+  const custom = loadCustomLimits();
+  const limit  = custom[userId] !== undefined ? custom[userId] : (isBooster ? LIMIT_BOOSTER : LIMIT_REGULAR);
   const usage = loadUsage();
   const now   = Date.now();
   const entry = usage[userId];
@@ -309,6 +311,21 @@ function injectWatermark(code) {
     /^(-- Deobfuscated by discord\.gg\/leaking)/m,
     `$1${WATERMARK_ENCODED}`
   );
+}
+
+// ─── Bans ─────────────────────────────────────────────────────────────────────
+
+const BANS_FILE         = path.join(DATA_DIR, 'bans.json');
+const CUSTOM_LIMITS_FILE= path.join(DATA_DIR, 'custom_limits.json');
+
+function loadBans()         { try { return JSON.parse(fs.readFileSync(BANS_FILE, 'utf8')); }          catch { return {}; } }
+function saveBans(d)        { fs.mkdirSync(DATA_DIR,{recursive:true}); fs.writeFileSync(BANS_FILE, JSON.stringify(d,null,2)); }
+function loadCustomLimits() { try { return JSON.parse(fs.readFileSync(CUSTOM_LIMITS_FILE, 'utf8')); } catch { return {}; } }
+function saveCustomLimits(d){ fs.mkdirSync(DATA_DIR,{recursive:true}); fs.writeFileSync(CUSTOM_LIMITS_FILE, JSON.stringify(d,null,2)); }
+
+function isBanned(userId) {
+  const bans = loadBans();
+  return !!bans[userId];
 }
 
 // ─── Permission helpers ───────────────────────────────────────────────────────
@@ -876,6 +893,43 @@ const commands = [
     .setName('help')
     .setDescription('How to use this bot')
     .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('submit')
+    .setDescription('Submit an unsupported obfuscator sample — bot tries to detect it and shows errors')
+    .addStringOption(o =>
+      o.setName('name').setDescription('Name of the obfuscator you think it is').setRequired(true))
+    .addAttachmentOption(o =>
+      o.setName('file').setDescription('.lua / .luau / .txt obfuscated file').setRequired(true))
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('admin')
+    .setDescription('Admin commands (requires Administrator permission)')
+    .setDefaultMemberPermissions('8') // ADMINISTRATOR bit
+    .addSubcommand(s => s
+      .setName('resetusage')
+      .setDescription('Reset a user\'s daily deob usage')
+      .addUserOption(o => o.setName('user').setDescription('Target user').setRequired(true)))
+    .addSubcommand(s => s
+      .setName('ban')
+      .setDescription('Ban a user from using the bot')
+      .addUserOption(o => o.setName('user').setDescription('User to ban').setRequired(true))
+      .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false)))
+    .addSubcommand(s => s
+      .setName('unban')
+      .setDescription('Unban a user')
+      .addUserOption(o => o.setName('user').setDescription('User to unban').setRequired(true)))
+    .addSubcommand(s => s
+      .setName('setlimit')
+      .setDescription('Set a custom daily deob limit for a user')
+      .addUserOption(o => o.setName('user').setDescription('Target user').setRequired(true))
+      .addIntegerOption(o => o.setName('limit').setDescription('Daily limit (0 = no access)').setMinValue(0).setMaxValue(999).setRequired(true)))
+    .addSubcommand(s => s
+      .setName('announce')
+      .setDescription('Post an announcement in the bot channel')
+      .addStringOption(o => o.setName('message').setDescription('Announcement text').setRequired(true)))
+    .toJSON(),
 ];
 
 async function registerCommands() {
@@ -893,8 +947,15 @@ client.once('ready', () => console.log(`[+] Online as ${client.user.tag}`));
 
 client.on('interactionCreate', async (interaction) => {
 
-  // ── Channel gate — commands only work in the designated channel ───────────
-  if (interaction.channelId !== ALLOWED_CHANNEL_ID) {
+  // ── Ban check — banned users get nothing ─────────────────────────────────
+  if (isBanned(interaction.user.id)) {
+    await interaction.reply({ content: '<:error:1536769814637322271> You are banned from using this bot.', ephemeral: true });
+    return;
+  }
+
+  // ── Channel gate — /admin is exempt (works anywhere); all others restricted ─
+  const isAdminCmd = interaction.isChatInputCommand() && interaction.commandName === 'admin';
+  if (!isAdminCmd && interaction.channelId !== ALLOWED_CHANNEL_ID) {
     await interaction.reply({
       content: `<:error:1536769814637322271> Este comando só pode ser usado em <#${ALLOWED_CHANNEL_ID}>.`,
       ephemeral: true,
@@ -1462,6 +1523,170 @@ client.on('interactionCreate', async (interaction) => {
       ]}],
       ephemeral: true,
     });
+    return;
+  }
+
+  // ── /admin ─────────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'admin') {
+    if (!isAdmin(interaction.member)) {
+      await interaction.reply({ content: '<:error:1536769814637322271> Administrator permission required.', ephemeral: true });
+      return;
+    }
+
+    const sub = interaction.options.getSubcommand();
+
+    // resetusage
+    if (sub === 'resetusage') {
+      const target = interaction.options.getUser('user');
+      const usage  = loadUsage();
+      delete usage[target.id];
+      saveUsage(usage);
+      await interaction.reply({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: 0x57F287, components: [{
+          type: 10, content: `<a:success:1536769872552403034> Reset usage for **${target.tag || target.username}** — they can now use the bot again.`,
+        }]}],
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // ban
+    if (sub === 'ban') {
+      const target = interaction.options.getUser('user');
+      const reason = interaction.options.getString('reason') || 'No reason given';
+      const bans   = loadBans();
+      bans[target.id] = { reason, bannedAt: Date.now(), bannedBy: interaction.user.id };
+      saveBans(bans);
+      await interaction.reply({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: 0xED4245, components: [{
+          type: 10, content: `<:error:1536769814637322271> **${target.tag || target.username}** banned from the bot.\n**Reason:** ${reason}`,
+        }]}],
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // unban
+    if (sub === 'unban') {
+      const target = interaction.options.getUser('user');
+      const bans   = loadBans();
+      if (!bans[target.id]) {
+        await interaction.reply({ content: `<:error:1536769814637322271> **${target.tag || target.username}** is not banned.`, ephemeral: true });
+        return;
+      }
+      delete bans[target.id];
+      saveBans(bans);
+      await interaction.reply({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: 0x57F287, components: [{
+          type: 10, content: `<a:success:1536769872552403034> **${target.tag || target.username}** unbanned.`,
+        }]}],
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // setlimit
+    if (sub === 'setlimit') {
+      const target  = interaction.options.getUser('user');
+      const newLimit= interaction.options.getInteger('limit');
+      const custom  = loadCustomLimits();
+      if (newLimit === null) {
+        delete custom[target.id];
+      } else {
+        custom[target.id] = newLimit;
+      }
+      saveCustomLimits(custom);
+      await interaction.reply({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: 0x57F287, components: [{
+          type: 10, content: `<a:success:1536769872552403034> Custom limit for **${target.tag || target.username}** set to **${newLimit}/day**.`,
+        }]}],
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // announce
+    if (sub === 'announce') {
+      const msg  = interaction.options.getString('message');
+      const chan = interaction.guild.channels.cache.get(ALLOWED_CHANNEL_ID);
+      if (!chan) {
+        await interaction.reply({ content: '<:error:1536769814637322271> Bot channel not found.', ephemeral: true });
+        return;
+      }
+      await chan.send({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: 0x5865F2, components: [
+          { type: 10, content: `## 📢 Announcement\n${msg}` },
+          { type: 14 },
+          { type: 10, content: `*Posted by ${interaction.user.toString()}*` },
+        ]}],
+      });
+      await interaction.reply({ content: '<a:success:1536769872552403034> Announcement posted.', ephemeral: true });
+      return;
+    }
+  }
+
+  // ── /submit ────────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'submit') {
+    const obfName = interaction.options.getString('name');
+    const att     = interaction.options.getAttachment('file');
+    await interaction.deferReply();
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deob_'));
+    const outPath= path.join(tmpDir, 'output.lua');
+    const inPath = path.join(tmpDir, `input${path.extname(att.name) || '.lua'}`);
+
+    try {
+      await downloadFile(att.url, inPath);
+      const src = fs.readFileSync(inPath, 'latin1');
+      const det = engineForDetection(src);
+
+      // Try running generic trace (30s timeout) to capture error output
+      const { ok: traceOk, stderr: traceErr, elapsed: traceTime } = await runDeob(inPath, outPath, 'generic');
+      const errSnippet = (traceErr || '').trim().slice(0, 800) || '*No error output*';
+      const traceOut   = traceOk && fs.existsSync(outPath)
+        ? fs.readFileSync(outPath, 'utf8').slice(0, 400)
+        : null;
+
+      // Forward to log channel if configured
+      if (SUBMIT_LOG_CHANNEL_ID) {
+        const logChan = interaction.guild.channels.cache.get(SUBMIT_LOG_CHANNEL_ID);
+        if (logChan) {
+          await logChan.send({
+            content: `**New Submission** from ${interaction.user.toString()}\n**Claimed:** \`${obfName}\`  |  **Detected:** \`${det.label}\``,
+            files: [new AttachmentBuilder(Buffer.from(fs.readFileSync(inPath, 'utf8'), 'utf8'), { name: att.name })],
+          });
+        }
+      }
+
+      await interaction.editReply({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: 0xFEE75C, components: [
+          { type: 10, content: [
+            `## Submission Analysis — \`${att.name}\``,
+            `**Claimed obfuscator:** \`${obfName}\``,
+            `**Our detector says:** \`${det.label}\` (${det.confidence}% confidence)`,
+            `**Generic trace:** ${traceOk ? `completed in ${traceTime}s` : `failed in ${traceTime}s`}`,
+          ].join('\n') },
+          { type: 14 },
+          { type: 10, content: `**Error / Stderr output:**\n\`\`\`\n${errSnippet}\n\`\`\`` },
+          ...(traceOut ? [
+            { type: 14 },
+            { type: 10, content: `**Trace output preview:**\n\`\`\`lua\n${traceOut}\n\`\`\`` },
+          ] : []),
+          { type: 14 },
+          { type: 10, content: `*Thanks for the submission! The team will review it.*` },
+        ]}],
+      });
+    } catch (e) {
+      await interaction.editReply({ content: `<:error:1536769814637322271> Error: ${e.message}` });
+    } finally {
+      try { fs.rmSync(tmpDir, { recursive: true }); } catch {}
+    }
     return;
   }
 });
