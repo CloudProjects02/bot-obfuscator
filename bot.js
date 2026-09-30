@@ -74,6 +74,30 @@ const ALL_ENGINES = [
   { id: 'generic',         label: 'Generic Trace',         style: 2 },
 ];
 
+// Short description for each engine (used in /engines)
+const ENGINE_DESC = {
+  luraph_v15:     'Luraph v15 — current default Luraph VM',
+  luraph_v14:     'Luraph v14.x — older VM, runs via env logger at runtime',
+  luraph_v17:     'Luraph v17 — newer experimental variant',
+  lph_deobf:      'LPH Devirt v8 — LPH obfuscator variant',
+  moonsec_cs:     'MoonSec V3 — .NET devirtualizer (recommended for V3)',
+  moonsec_js:     'MoonSec — JavaScript port fallback',
+  moonsec_py:     'MoonSec — Python port fallback',
+  prometheus_js:  'Prometheus — standard JS deobfuscator',
+  prometheus_v2:  'Prometheus v2 — newer variant',
+  prometheus_wad: 'Prometheus WAD — WAD payload variant',
+  ironbrew2:      'IronBrew2 — classic IB2 devirt',
+  ironbrew_new:   'IronBrew2 (New) — updated .NET binary',
+  '6vms_logger':  '6Vms Logger — runtime environment trace',
+  '6vms_static':  '6Vms Static — static analysis pass',
+  threaded:       'Threaded (Unveilr v3) — multi-thread VM tracer',
+  '77fuscator':   '77fuscator — 77 custom VM deobfuscator',
+  aspect_dumper:  'Aspect Dumper — Aspect VM logger',
+  cracker2:       'Cracker2 v16 — Python static analysis pipeline',
+  moonveil:       'Moonveil — MoonVeil 2.x decompiler',
+  generic:        'Generic Trace — fallback environment logger',
+};
+
 // Map detected obfuscator type → recommended engine id
 const DETECT_MAP = {
   luraph:     'luraph_v15',
@@ -183,6 +207,24 @@ function checkAndConsumeLimit(userId, isBooster, isAdmin, consume = false) {
   return { allowed: true, remaining: limit - count - (consume ? 1 : 0), limit };
 }
 
+// ─── Stats ────────────────────────────────────────────────────────────────────
+
+const STATS_FILE = path.join(DATA_DIR, 'stats.json');
+
+function loadStats() {
+  try { return JSON.parse(fs.readFileSync(STATS_FILE, 'utf8')); }
+  catch { return { total_deobs: 0, total_dumps: 0, total_detects: 0, engine_counts: {} }; }
+}
+
+function recordStat(type, engineId = null) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  const s = loadStats();
+  if (type === 'deob')   { s.total_deobs++;   if (engineId) s.engine_counts[engineId] = (s.engine_counts[engineId] || 0) + 1; }
+  if (type === 'dump')   s.total_dumps++;
+  if (type === 'detect') s.total_detects++;
+  fs.writeFileSync(STATS_FILE, JSON.stringify(s, null, 2));
+}
+
 // ─── Permission helpers ───────────────────────────────────────────────────────
 
 function isAdmin(member) {
@@ -246,6 +288,24 @@ function extractStrings(content) {
 
 function extractUrlsTouched(content) {
   return [...new Set(content.match(/https?:\/\/[^\s"')\]>]+/g) || [])].slice(0, 5);
+}
+
+function extractConstants(content) {
+  const webhooks = [...new Set(
+    (content.match(/https?:\/\/(?:canary\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9_-]+/g) || [])
+  )];
+  const urls = [...new Set(
+    (content.match(/https?:\/\/[^\s"')\]>,]+/g) || []).filter(u => !webhooks.includes(u))
+  )].slice(0, 20);
+  const hexKeys = [...new Set(
+    (content.match(/\b[0-9a-fA-F]{32,}\b/g) || [])
+  )].slice(0, 10);
+  const strLiterals = [...new Set(
+    (content.match(/(?:"(?:[^"\\]|\\.){4,}"|'(?:[^'\\]|\\.){4,}')/g) || [])
+      .map(s => s.slice(1, -1))
+      .filter(s => s.length >= 4 && !/^[0-9a-fA-F]+$/.test(s))
+  )].slice(0, 30);
+  return { webhooks, urls, hexKeys, strLiterals };
 }
 
 // ─── Network ─────────────────────────────────────────────────────────────────
@@ -616,6 +676,7 @@ async function executeDeob(interaction, job, engineId) {
     const pastfyUrl   = await uploadPastefy(outContent, job.filename + '.deob.lua');
     const outName     = job.filename.replace(/\.(lua|luau|txt)$/i, '.deobfuscated.lua');
 
+    recordStat('deob', engineId);
     const resultId = `r_${Date.now()}`;
     resultCache.set(resultId, { content: outContent, filename: outName, expire: Date.now() + 30 * 60_000 });
 
@@ -670,6 +731,54 @@ const commands = [
     .setDescription('Detect the obfuscator used in a Lua file')
     .addAttachmentOption(o =>
       o.setName('file').setDescription('.lua / .luau / .txt file to analyze').setRequired(true))
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('usage')
+    .setDescription('Check how many deobs you have left today')
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('engines')
+    .setDescription('List all supported deobfuscation engines')
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('strings')
+    .setDescription('Extract all string literals from a Lua script (no engine needed)')
+    .addAttachmentOption(o =>
+      o.setName('file').setDescription('.lua / .luau / .txt file to scan').setRequired(true))
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('scan')
+    .setDescription('Scan a script for suspicious URLs, webhooks, and blocked domains')
+    .addAttachmentOption(o =>
+      o.setName('file').setDescription('.lua / .luau / .txt file to scan').setRequired(true))
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('condumper')
+    .setDescription('Dump all constants from a script — strings, URLs, webhooks, hex keys')
+    .addAttachmentOption(o =>
+      o.setName('file').setDescription('.lua / .luau / .txt file').setRequired(true))
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('bypass')
+    .setDescription('Plato key solver — fetch auth.platorelay.com key from URL')
+    .addStringOption(o =>
+      o.setName('url').setDescription('The Plato auth URL from the script').setRequired(true))
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('stats')
+    .setDescription('Bot statistics — total deobs, dumps, most used engines')
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName('help')
+    .setDescription('How to use this bot')
     .toJSON(),
 ];
 
@@ -824,6 +933,7 @@ client.on('interactionCreate', async (interaction) => {
       await downloadFile(att.url, inPath);
       const src = fs.readFileSync(inPath, 'latin1');
       const det = engineForDetection(src);
+      recordStat('detect');
       await interaction.editReply(buildDetectMsg(att.name, det.label, det.confidence / 100));
     } catch (e) {
       await interaction.editReply({ content: `<:error:1536769814637322271> Detection error: ${e.message}` });
@@ -912,6 +1022,7 @@ client.on('interactionCreate', async (interaction) => {
     // ── /dump — generic trace only ────────────────────────────────────────
     if (interaction.commandName === 'dump') {
       checkAndConsumeLimit(interaction.user.id, boost, admin, true);
+      recordStat('dump');
 
       await interaction.editReply({
         flags: CV2_FLAG,
@@ -995,6 +1106,267 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.editReply(
       buildEngineSelectMsg(att.name, det.label, det.id, jobId, det.confidence)
     );
+  }
+
+  // ── /usage ─────────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'usage') {
+    const info = checkAndConsumeLimit(interaction.user.id, boost, admin, false);
+    const isAdm = isAdmin(member);
+    let body;
+    if (isAdm) {
+      body = `**Usage:** Unlimited (admin)\n**Limit:** ∞`;
+    } else {
+      const used = info.limit - info.remaining;
+      const pct  = Math.round((used / info.limit) * 100);
+      const bar  = '█'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
+      const resetIn = info.resetIn ?? '< 24';
+      body = [
+        `**${used}/${info.limit}** uses today ${boost ? '(Booster)' : '(Regular)'}`,
+        `\`${bar}\` ${pct}%`,
+        info.remaining > 0
+          ? `**${info.remaining}** remaining — resets in ~${resetIn}h`
+          : `<:error:1536769814637322271> **Limit reached** — resets in ~${resetIn}h`,
+      ].join('\n');
+    }
+    await interaction.reply({
+      flags: CV2_FLAG,
+      components: [{ type: 17, accent_color: 0x5865F2, components: [
+        { type: 10, content: `## <a:loading:1536769812187840633> Your Usage\n${body}` },
+      ]}],
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // ── /engines ───────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'engines') {
+    const families = [
+      { name: 'Luraph',    ids: ['luraph_v15','luraph_v14','luraph_v17','lph_deobf'] },
+      { name: 'MoonSec',   ids: ['moonsec_cs','moonsec_js','moonsec_py'] },
+      { name: 'Prometheus',ids: ['prometheus_js','prometheus_v2','prometheus_wad'] },
+      { name: 'IronBrew',  ids: ['ironbrew2','ironbrew_new'] },
+      { name: '6Vms / Lune',ids: ['6vms_logger','6vms_static','threaded'] },
+      { name: 'Other',     ids: ['77fuscator','aspect_dumper','cracker2','moonveil','generic'] },
+    ];
+    const lines = families.map(f =>
+      `**${f.name}**\n` + f.ids.map(id => `> \`${id}\` — ${ENGINE_DESC[id] || id}`).join('\n')
+    ).join('\n\n');
+    await interaction.reply({
+      flags: CV2_FLAG,
+      components: [{ type: 17, accent_color: 0x5865F2, components: [
+        { type: 10, content: `## Supported Engines (${ALL_ENGINES.length} total)\n\n${lines}` },
+      ]}],
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // ── /strings ───────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'strings') {
+    const att = interaction.options.getAttachment('file');
+    await interaction.deferReply();
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deob_'));
+    const inPath = path.join(tmpDir, `input${path.extname(att.name) || '.lua'}`);
+    try {
+      await downloadFile(att.url, inPath);
+      const src = fs.readFileSync(inPath, 'utf8');
+      const strs = [...new Set(
+        (src.match(/(?:"(?:[^"\\]|\\.){2,}"|'(?:[^'\\]|\\.){2,}')/g) || [])
+          .map(s => s.slice(1, -1))
+          .filter(s => s.trim().length > 1)
+      )].slice(0, 60);
+      const out = strs.length > 0
+        ? strs.map(s => `\`${s.replace(/`/g, "'")}\``).join('\n')
+        : '*No string literals found.*';
+      const pasteUrl = strs.length > 20 ? await uploadPastefy(strs.join('\n'), att.name + '.strings.txt') : null;
+      await interaction.editReply({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: 0x5865F2, components: [
+          { type: 10, content: `## String Extraction — \`${att.name}\`\n**${strs.length}** strings found${pasteUrl ? ` · [full list](${pasteUrl})` : ''}` },
+          { type: 14 },
+          { type: 10, content: strs.slice(0, 20).map(s => `\`${s.replace(/`/g, "'")}\``).join('\n') || '*none*' },
+        ]}],
+      });
+    } catch (e) {
+      await interaction.editReply({ content: `<:error:1536769814637322271> Error: ${e.message}` });
+    } finally {
+      try { fs.rmSync(tmpDir, { recursive: true }); } catch {}
+    }
+    return;
+  }
+
+  // ── /scan ──────────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'scan') {
+    const att = interaction.options.getAttachment('file');
+    await interaction.deferReply();
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deob_'));
+    const inPath = path.join(tmpDir, `input${path.extname(att.name) || '.lua'}`);
+    try {
+      await downloadFile(att.url, inPath);
+      const src     = fs.readFileSync(inPath, 'utf8');
+      const blocked = checkBlocklist(src);
+      const urls    = [...new Set((src.match(/https?:\/\/[^\s"')\]>,]+/g) || []))].slice(0, 15);
+      const det     = engineForDetection(fs.readFileSync(inPath, 'latin1'));
+      const parts   = [
+        `## <a:success:1536769872552403034> Scan — \`${att.name}\``,
+        `**Detected:** ${det.label}  |  **URLs found:** ${urls.length}  |  **Blocked:** ${blocked.length}`,
+      ].join('\n');
+      const urlBlock = urls.length > 0 ? urls.map(u => `\`${u}\``).join('\n') : '*none*';
+      const blkBlock = blocked.length > 0
+        ? blocked.map(b => `<:error:1536769814637322271> \`${b.url}\` — ${b.reason}`).join('\n')
+        : '<a:success:1536769872552403034> *No blocked domains detected*';
+      await interaction.editReply({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: blocked.length > 0 ? 0xED4245 : 0x57F287, components: [
+          { type: 10, content: parts },
+          { type: 14 },
+          { type: 10, content: `**URLs:**\n${urlBlock}` },
+          { type: 14 },
+          { type: 10, content: `**Blocklist hits:**\n${blkBlock}` },
+        ]}],
+      });
+    } catch (e) {
+      await interaction.editReply({ content: `<:error:1536769814637322271> Error: ${e.message}` });
+    } finally {
+      try { fs.rmSync(tmpDir, { recursive: true }); } catch {}
+    }
+    return;
+  }
+
+  // ── /condumper ─────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'condumper') {
+    const att = interaction.options.getAttachment('file');
+    await interaction.deferReply();
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deob_'));
+    const inPath = path.join(tmpDir, `input${path.extname(att.name) || '.lua'}`);
+    try {
+      await downloadFile(att.url, inPath);
+      const src = fs.readFileSync(inPath, 'utf8');
+      const { webhooks, urls, hexKeys, strLiterals } = extractConstants(src);
+      const sections = [];
+      if (webhooks.length)    sections.push(`**Discord Webhooks (${webhooks.length}):**\n${webhooks.map(w => `\`${w}\``).join('\n')}`);
+      if (hexKeys.length)     sections.push(`**Hex Keys/Tokens (${hexKeys.length}):**\n${hexKeys.map(k => `\`${k}\``).join('\n')}`);
+      if (urls.length)        sections.push(`**URLs (${urls.length}):**\n${urls.slice(0,10).map(u => `\`${u}\``).join('\n')}`);
+      if (strLiterals.length) sections.push(`**Strings (${strLiterals.length}):**\n${strLiterals.slice(0,15).map(s => `\`${s.replace(/`/g,"'")}\``).join('\n')}`);
+      const fullDump = [
+        `=== CONSTANTS DUMP: ${att.name} ===`,
+        webhooks.length ? `\nWEBHOOKS:\n${webhooks.join('\n')}` : '',
+        hexKeys.length  ? `\nHEX KEYS:\n${hexKeys.join('\n')}` : '',
+        urls.length     ? `\nURLs:\n${urls.join('\n')}` : '',
+        strLiterals.length ? `\nSTRINGS:\n${strLiterals.join('\n')}` : '',
+      ].filter(Boolean).join('\n');
+      const pasteUrl = await uploadPastefy(fullDump, att.name + '.condump.txt');
+      await interaction.editReply({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: 0xFEE75C, components: [
+          { type: 10, content: `## Constant Dump — \`${att.name}\`${pasteUrl ? ` · [full dump](${pasteUrl})` : ''}` },
+          { type: 14 },
+          { type: 10, content: sections.length > 0 ? sections.join('\n\n') : '*No constants found.*' },
+        ]}],
+        files: [new AttachmentBuilder(Buffer.from(fullDump, 'utf8'), { name: att.name + '.condump.txt' })],
+      });
+    } catch (e) {
+      await interaction.editReply({ content: `<:error:1536769814637322271> Error: ${e.message}` });
+    } finally {
+      try { fs.rmSync(tmpDir, { recursive: true }); } catch {}
+    }
+    return;
+  }
+
+  // ── /bypass ────────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'bypass') {
+    const rawUrl = interaction.options.getString('url');
+    if (!rawUrl.includes('platorelay.com') && !rawUrl.includes('plato')) {
+      await interaction.reply({ content: '<:error:1536769814637322271> URL must be a Plato relay endpoint.', ephemeral: true });
+      return;
+    }
+    await interaction.deferReply();
+    try {
+      const key = await new Promise((resolve, reject) => {
+        const proto = rawUrl.startsWith('https') ? https : http;
+        let data = '';
+        proto.get(rawUrl, { headers: { 'User-Agent': 'Roblox/WinInet' } }, res => {
+          res.on('data', c => (data += c));
+          res.on('end', () => resolve(data.trim()));
+        }).on('error', reject);
+      });
+      const display = key.length > 500 ? key.slice(0, 500) + '...' : key;
+      await interaction.editReply({
+        flags: CV2_FLAG,
+        components: [{ type: 17, accent_color: 0x57F287, components: [
+          { type: 10, content: `## <a:success:1536769872552403034> Plato Key Resolved` },
+          { type: 14 },
+          { type: 10, content: `\`\`\`\n${display}\n\`\`\`` },
+        ]}],
+      });
+    } catch (e) {
+      await interaction.editReply({ content: `<:error:1536769814637322271> Failed to fetch: ${e.message}` });
+    }
+    return;
+  }
+
+  // ── /stats ─────────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'stats') {
+    const s = loadStats();
+    const topEngines = Object.entries(s.engine_counts || {})
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([id, n], i) => `${i + 1}. \`${id}\` — **${n}**`)
+      .join('\n') || '*no data yet*';
+    await interaction.reply({
+      flags: CV2_FLAG,
+      components: [{ type: 17, accent_color: 0x5865F2, components: [
+        { type: 10, content: [
+          `## Bot Statistics`,
+          `**Total deobs:** ${s.total_deobs}`,
+          `**Total dumps:** ${s.total_dumps}`,
+          `**Total detects:** ${s.total_detects}`,
+          `**Total requests:** ${s.total_deobs + s.total_dumps + s.total_detects}`,
+        ].join('\n') },
+        { type: 14 },
+        { type: 10, content: `**Top Engines:**\n${topEngines}` },
+      ]}],
+    });
+    return;
+  }
+
+  // ── /help ──────────────────────────────────────────────────────────────────
+  if (interaction.commandName === 'help') {
+    await interaction.reply({
+      flags: CV2_FLAG,
+      components: [{ type: 17, accent_color: 0x5865F2, components: [
+        { type: 10, content: [
+          `## How to Use`,
+          `\`/deob\` — throw ur obfuscated file / link / code at it, pick an engine, get clean code back`,
+          `\`/get\` — fetch a script from a URL and inspect / deobfuscate it`,
+          `\`/dump\` — runs the script in a sandbox and logs what it does (strings, remotes, loadstring payloads). good when deob fails on VM stuff`,
+          `\`/condumper\` — peel every constant out — strings, URLs, keys, webhooks`,
+          `\`/strings\` — extract all string literals from a file without running any engine`,
+          `\`/scan\` — scan for suspicious URLs, webhooks, and blocked domains`,
+          `\`/detect\` — tells u what obfuscator ur file is`,
+          `\`/bypass\` — Plato key solver (auth.platorelay.com)`,
+          `\`/usage\` — how many deobs u have left today`,
+          `\`/engines\` — list all 20 supported engines`,
+          `\`/stats\` — bot stats`,
+        ].join('\n') },
+        { type: 14 },
+        { type: 10, content: [
+          `## What We Support`,
+          `77fuscator, IronBrew2, Prometheus, MoonSec V3, Luraph v14/v15/v17, MoonVeil, Cracker2, Aspect, 6Vms, Threaded, LPH, and more`,
+        ].join('\n') },
+        { type: 14 },
+        { type: 10, content: [
+          `## Quick Start`,
+          `1. upload .lua file or paste link`,
+          `2. let it detect or pick manually`,
+          `3. copy / download result`,
+          ``,
+          `**Deob failed?** try \`/dump\` — it runs it safely and shows what it actually did`,
+        ].join('\n') },
+      ]}],
+      ephemeral: true,
+    });
+    return;
   }
 });
 
