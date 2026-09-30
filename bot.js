@@ -31,6 +31,8 @@ const GUILD_ID  = process.env.GUILD_ID || '1531394302956011603';
 // Set MEMBER_ROLE_ID in .env — if blank, tag check is skipped for all
 const MEMBER_ROLE_ID = process.env.MEMBER_ROLE_ID || '';
 
+const ALLOWED_CHANNEL_ID = '1531399709246357594';
+
 const LIMIT_REGULAR = 6;
 const LIMIT_BOOSTER = 20;
 const CV2_FLAG      = 1 << 15; // MessageFlags.IsComponentsV2
@@ -113,8 +115,10 @@ function buildEngineList(recommendedId) {
 
 // ─── In-memory pending jobs ───────────────────────────────────────────────────
 // jobId -> { inputPath, tmpDir, filename, userId, expire }
-
 const pendingJobs = new Map();
+
+// resultId -> { content, filename, expire }  (30-min TTL)
+const resultCache = new Map();
 
 function cleanExpiredJobs() {
   const now = Date.now();
@@ -123,6 +127,9 @@ function cleanExpiredJobs() {
       try { fs.rmSync(job.tmpDir, { recursive: true }); } catch {}
       pendingJobs.delete(id);
     }
+  }
+  for (const [id, r] of resultCache) {
+    if (now > r.expire) resultCache.delete(id);
   }
 }
 setInterval(cleanExpiredJobs, 60_000);
@@ -425,7 +432,7 @@ function buildErrorMsg(filename, engine, elapsed, errText) {
   };
 }
 
-function buildSuccessMsg({ filename, engine, inputSize, outputSize, reduction, outputLines, strings, pastfyUrl, blocked, elapsed }) {
+function buildSuccessMsg({ filename, engine, inputSize, outputSize, reduction, outputLines, strings, pastfyUrl, blocked, elapsed, resultId }) {
   const strLine = strings.length > 0
     ? `**Recovered Strings:** ${strings.slice(0, 6).map(s => `\`${s}\``).join(', ')}${strings.length > 6 ? ` +${strings.length - 6} more` : ''}\n`
     : '';
@@ -466,9 +473,9 @@ function buildSuccessMsg({ filename, engine, inputSize, outputSize, reduction, o
   inner.push({
     type: 1,
     components: [
-      { type: 2, style: 2, label: 'Copy', custom_id: `copy_noop_${Date.now()}` },
+      { type: 2, style: 2, label: 'Copy',     custom_id: `copy_${resultId}` },
       ...(pastfyUrl ? [{ type: 2, style: 5, label: 'Raw Output', url: pastfyUrl }] : []),
-      { type: 2, style: 3, label: 'Download', custom_id: `dl_noop_${Date.now()}` },
+      { type: 2, style: 3, label: 'Download', custom_id: `dl_${resultId}` },
     ],
   });
 
@@ -478,7 +485,7 @@ function buildSuccessMsg({ filename, engine, inputSize, outputSize, reduction, o
   };
 }
 
-function buildDumpMsg({ filename, elapsed, operations, stages, detected, urlsTouched, codePreview, pastfyUrl, outFilename, outContent }) {
+function buildDumpMsg({ filename, elapsed, operations, stages, detected, urlsTouched, codePreview, pastfyUrl, outFilename, outContent, resultId }) {
   const inner = [
     {
       type: 10,
@@ -517,9 +524,9 @@ function buildDumpMsg({ filename, elapsed, operations, stages, detected, urlsTou
   inner.push({
     type: 1,
     components: [
-      { type: 2, style: 2, label: 'Copy', custom_id: `copy_noop_${Date.now()}` },
+      { type: 2, style: 2, label: 'Copy',     custom_id: `copy_${resultId}` },
       ...(pastfyUrl ? [{ type: 2, style: 5, label: 'Raw Dump', url: pastfyUrl }] : []),
-      { type: 2, style: 3, label: 'Download', custom_id: `dl_noop_${Date.now()}` },
+      { type: 2, style: 3, label: 'Download', custom_id: `dl_${resultId}` },
     ],
   });
 
@@ -607,6 +614,9 @@ async function executeDeob(interaction, job, engineId) {
     const pastfyUrl   = await uploadPastefy(outContent, job.filename + '.deob.lua');
     const outName     = job.filename.replace(/\.(lua|luau|txt)$/i, '.deobfuscated.lua');
 
+    const resultId = `r_${Date.now()}`;
+    resultCache.set(resultId, { content: outContent, filename: outName, expire: Date.now() + 30 * 60_000 });
+
     await interaction.editReply({
       ...buildSuccessMsg({
         filename:    job.filename,
@@ -619,6 +629,7 @@ async function executeDeob(interaction, job, engineId) {
         pastfyUrl,
         blocked,
         elapsed,
+        resultId,
       }),
       files: [new AttachmentBuilder(Buffer.from(outContent, 'utf8'), { name: outName })],
     });
@@ -674,6 +685,15 @@ client.once('ready', () => console.log(`[+] Online as ${client.user.tag}`));
 // ─── Interaction handler ──────────────────────────────────────────────────────
 
 client.on('interactionCreate', async (interaction) => {
+
+  // ── Channel gate — commands only work in the designated channel ───────────
+  if (interaction.channelId !== ALLOWED_CHANNEL_ID) {
+    await interaction.reply({
+      content: `<:error:1536769814637322271> Este comando só pode ser usado em <#${ALLOWED_CHANNEL_ID}>.`,
+      ephemeral: true,
+    });
+    return;
+  }
 
   // ── Button: engine selected after /deob detection ─────────────────────────
   if (interaction.isButton()) {
@@ -741,9 +761,36 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
-    // noop buttons (Copy / Download placeholders)
-    if (cid.startsWith('copy_noop') || cid.startsWith('dl_noop')) {
-      await interaction.reply({ content: 'Use the attached file or the Pastefy link above.', ephemeral: true });
+    // Copy button — send content inline for easy copying
+    if (cid.startsWith('copy_')) {
+      const rid = cid.slice(5);
+      const cached = resultCache.get(rid);
+      if (!cached) {
+        await interaction.reply({ content: '<:error:1536769814637322271> Output expired (30 min limit). Run the command again.', ephemeral: true });
+        return;
+      }
+      const snippet = cached.content.length > 1900
+        ? cached.content.slice(0, 1900) + '\n... (truncated — use Download for full file)'
+        : cached.content;
+      await interaction.reply({
+        content: `\`\`\`lua\n${snippet}\n\`\`\``,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // Download button — send as file attachment
+    if (cid.startsWith('dl_')) {
+      const rid = cid.slice(3);
+      const cached = resultCache.get(rid);
+      if (!cached) {
+        await interaction.reply({ content: '<:error:1536769814637322271> Output expired (30 min limit). Run the command again.', ephemeral: true });
+        return;
+      }
+      await interaction.reply({
+        files: [new AttachmentBuilder(Buffer.from(cached.content, 'utf8'), { name: cached.filename })],
+        ephemeral: true,
+      });
       return;
     }
 
@@ -900,6 +947,9 @@ client.on('interactionCreate', async (interaction) => {
         const detDump = engineForDetection(srcDump);
         const plugin  = { label: detDump.label };
 
+        const dumpResultId = `r_${Date.now()}`;
+        resultCache.set(dumpResultId, { content: outContent, filename: outName, expire: Date.now() + 30 * 60_000 });
+
         await interaction.editReply({
           ...buildDumpMsg({
             filename:    att.name,
@@ -912,6 +962,7 @@ client.on('interactionCreate', async (interaction) => {
             pastfyUrl,
             outFilename: outName,
             outContent,
+            resultId:    dumpResultId,
           }),
           files: [new AttachmentBuilder(Buffer.from(outContent, 'utf8'), { name: outName })],
         });
