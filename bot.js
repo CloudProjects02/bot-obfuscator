@@ -144,6 +144,69 @@ const pendingJobs = new Map();
 // resultId -> { content, filename, expire }  (30-min TTL)
 const resultCache = new Map();
 
+// ─── Deob queue ───────────────────────────────────────────────────────────────
+// Regular users queue; boosters/admins bypass entirely (separate activeDeobs counter)
+const deobQueue  = []; // { interaction, job, engineId, filename, engineLabel }
+let   activeDeobs = 0;
+
+function buildQueueMsg(filename, engineLabel, position, total) {
+  const bar = '█'.repeat(Math.max(0, 10 - Math.round((position / total) * 10))) +
+              '░'.repeat(Math.round((position / total) * 10));
+  return {
+    flags: CV2_FLAG,
+    components: [{ type: 17, accent_color: 0xFEE75C, components: [{
+      type: 10,
+      content: [
+        `## <a:loading:1536769812187840633> Queued for Deobfuscation`,
+        `**File:** \`${filename}\`  |  **Engine:** ${engineLabel}`,
+        `**Position: ${position}/${total}** in queue`,
+        `\`${bar}\``,
+        ``,
+        `> Get the **Booster** role to skip the queue instantly!`,
+      ].join('\n'),
+    }]}],
+  };
+}
+
+async function updateQueuePositions() {
+  const total = deobQueue.length + activeDeobs;
+  for (let i = 0; i < deobQueue.length; i++) {
+    const item = deobQueue[i];
+    try { await item.interaction.editReply(buildQueueMsg(item.filename, item.engineLabel, i + 1, total)); } catch {}
+  }
+}
+
+async function processQueue() {
+  if (deobQueue.length === 0 || activeDeobs >= 1) return;
+  const next = deobQueue.shift();
+  activeDeobs++;
+  updateQueuePositions().catch(() => {});
+  try {
+    await executeDeob(next.interaction, next.job, next.engineId);
+  } finally {
+    activeDeobs--;
+    processQueue().catch(() => {});
+  }
+}
+
+async function enqueueDeob(interaction, job, engineId, member) {
+  const admin = isAdmin(member);
+  const boost = isBooster(member);
+  const skip  = admin || boost || activeDeobs === 0;
+
+  if (skip) {
+    activeDeobs++;
+    try { await executeDeob(interaction, job, engineId); }
+    finally { activeDeobs--; processQueue().catch(() => {}); }
+    return;
+  }
+
+  // Regular user — add to queue
+  const engine = ALL_ENGINES.find(e => e.id === engineId) || ALL_ENGINES[0];
+  deobQueue.push({ interaction, job, engineId, filename: job.filename, engineLabel: engine.label });
+  await interaction.editReply(buildQueueMsg(job.filename, engine.label, deobQueue.length, deobQueue.length + activeDeobs));
+}
+
 function cleanExpiredJobs() {
   const now = Date.now();
   for (const [id, job] of pendingJobs) {
@@ -827,7 +890,7 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       await interaction.deferUpdate();
-      await executeDeob(interaction, job, engineId);
+      await enqueueDeob(interaction, job, engineId, interaction.member);
       return;
     }
 
