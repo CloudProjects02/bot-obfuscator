@@ -288,6 +288,29 @@ function recordStat(type, engineId = null) {
   fs.writeFileSync(STATS_FILE, JSON.stringify(s, null, 2));
 }
 
+// ─── Steganographic watermark ─────────────────────────────────────────────────
+// Encodes a string as zero-width Unicode characters (invisible in all renderers)
+// U+200B = bit 0, U+200C = bit 1, U+200D = char boundary
+
+const WM_TEXT = 'discord.gg/leaking';
+
+function encodeWatermark(text) {
+  return text.split('').map(ch => {
+    const bits = ch.charCodeAt(0).toString(2).padStart(8, '0');
+    return bits.split('').map(b => b === '0' ? '​' : '‌').join('') + '‍';
+  }).join('');
+}
+
+const WATERMARK_ENCODED = encodeWatermark(WM_TEXT);
+
+function injectWatermark(code) {
+  // Inject invisibly at end of our header comment — safe inside Lua comments
+  return code.replace(
+    /^(-- Deobfuscated by discord\.gg\/leaking)/m,
+    `$1${WATERMARK_ENCODED}`
+  );
+}
+
 // ─── Permission helpers ───────────────────────────────────────────────────────
 
 function isAdmin(member) {
@@ -729,7 +752,7 @@ async function executeDeob(interaction, job, engineId) {
 
     const rawContent  = fs.readFileSync(outputPath, 'utf8');
     const header      = `-- Deobfuscated by discord.gg/leaking\n-- Detected obfuscation: ${engine.label}\n\n`;
-    const outContent  = header + rawContent;
+    const outContent  = injectWatermark(header + rawContent);
     const outBytes    = Buffer.byteLength(outContent, 'utf8');
     const inBytes     = fs.statSync(job.inputPath).size;
     const reduction   = Math.max(0, Math.round((1 - outBytes / inBytes) * 100));
@@ -1108,7 +1131,7 @@ client.on('interactionCreate', async (interaction) => {
         const srcDump    = fs.readFileSync(inPath, 'latin1');
         const detDump    = engineForDetection(srcDump);
         const dumpHeader = `-- Deobfuscated by discord.gg/leaking\n-- Detected obfuscation: ${detDump.label}\n\n`;
-        const outContent = dumpHeader + rawDump;
+        const outContent = injectWatermark(dumpHeader + rawDump);
         const outBytes   = Buffer.byteLength(outContent, 'utf8');
         const urls       = extractUrlsTouched(outContent);
         const pastfyUrl  = await uploadPastefy(outContent, att.name + '.dump.lua');
