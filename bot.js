@@ -1636,44 +1636,36 @@ client.on('interactionCreate', async (interaction) => {
     const att     = interaction.options.getAttachment('file');
     await interaction.deferReply();
 
-    // Show immediate loading state so Discord doesn't show "thinking" indefinitely
-    await interaction.editReply({
-      flags: CV2_FLAG,
-      components: [{ type: 17, accent_color: 0xFEE75C, components: [{
-        type: 10,
-        content: `## <a:loading:1536769812187840633> Analyzing Submission\n**File:** \`${att.name}\`  |  **Claimed:** \`${obfName}\`\nRunning detector + generic trace engine...`,
-      }]}],
-    });
-
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deob_'));
     const outPath= path.join(tmpDir, 'output.lua');
     const inPath = path.join(tmpDir, `input${path.extname(att.name) || '.lua'}`);
 
     try {
       await downloadFile(att.url, inPath);
-
       const src = fs.readFileSync(inPath, 'latin1');
       const det = engineForDetection(src);
 
-      // Run generic trace to capture any errors (uses 2min timeout from runner)
+      // Try running generic trace (30s timeout) to capture error output
       const { ok: traceOk, stderr: traceErr, elapsed: traceTime } = await runDeob(inPath, outPath, 'generic');
-      const errSnippet = (traceErr || '').trim().slice(0, 800) || '*No error output produced*';
+      const errSnippet = (traceErr || '')
+        .split('\n')
+        .filter(l => !/^\[\*\]|\[!\] failed on|^timed out after|^\s*$/.test(l.trim()))
+        .join('\n')
+        .trim()
+        .slice(0, 800) || '*No error output*';
       const traceOut   = traceOk && fs.existsSync(outPath)
-        ? fs.readFileSync(outPath, 'utf8').trim().slice(0, 500)
+        ? fs.readFileSync(outPath, 'utf8').slice(0, 400)
         : null;
 
-      // Forward to log channel
+      // Forward to log channel if configured
       if (SUBMIT_LOG_CHANNEL_ID) {
-        try {
-          const logChan = interaction.guild.channels.cache.get(SUBMIT_LOG_CHANNEL_ID);
-          if (logChan) {
-            const rawSrc = fs.readFileSync(inPath, 'utf8');
-            await logChan.send({
-              content: `**New Submission** from ${interaction.user.toString()} (${interaction.user.id})\n**Claimed:** \`${obfName}\`  |  **Detected:** \`${det.label}\` (${det.confidence}%)`,
-              files: [new AttachmentBuilder(Buffer.from(rawSrc, 'utf8'), { name: att.name })],
-            });
-          }
-        } catch {}
+        const logChan = interaction.guild.channels.cache.get(SUBMIT_LOG_CHANNEL_ID);
+        if (logChan) {
+          await logChan.send({
+            content: `**New Submission** from ${interaction.user.toString()}\n**Claimed:** \`${obfName}\`  |  **Detected:** \`${det.label}\``,
+            files: [new AttachmentBuilder(Buffer.from(fs.readFileSync(inPath, 'utf8'), 'utf8'), { name: att.name })],
+          });
+        }
       }
 
       await interaction.editReply({
@@ -1682,21 +1674,21 @@ client.on('interactionCreate', async (interaction) => {
           { type: 10, content: [
             `## Submission Analysis — \`${att.name}\``,
             `**Claimed obfuscator:** \`${obfName}\``,
-            `**Detector result:** \`${det.label}\` — ${det.confidence}% confidence`,
-            `**Generic trace:** ${traceOk ? `<a:success:1536769872552403034> completed in ${traceTime}s` : `<:error:1536769814637322271> failed after ${traceTime}s`}`,
+            `**Our detector says:** \`${det.label}\` (${det.confidence}% confidence)`,
+            `**Generic trace:** ${traceOk ? `completed in ${traceTime}s` : `failed in ${traceTime}s`}`,
           ].join('\n') },
           { type: 14 },
-          { type: 10, content: `**Stderr / Error log:**\n\`\`\`\n${errSnippet}\n\`\`\`` },
+          { type: 10, content: `**Error / Stderr output:**\n\`\`\`\n${errSnippet}\n\`\`\`` },
           ...(traceOut ? [
             { type: 14 },
             { type: 10, content: `**Trace output preview:**\n\`\`\`lua\n${traceOut}\n\`\`\`` },
           ] : []),
           { type: 14 },
-          { type: 10, content: `*Thanks for the submission — the team will review it.*` },
+          { type: 10, content: `*Thanks for the submission! The team will review it.*` },
         ]}],
       });
     } catch (e) {
-      try { await interaction.editReply({ content: `<:error:1536769814637322271> Submit failed: ${e.message}` }); } catch {}
+      await interaction.editReply({ content: `<:error:1536769814637322271> Error: ${e.message}` });
     } finally {
       try { fs.rmSync(tmpDir, { recursive: true }); } catch {}
     }
